@@ -28,7 +28,7 @@ public class ItemController {
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto findItem(@RequestHeader("X-Sharer-User-Id") Long userId, @PathVariable Long itemId) {
+    public ItemDto findItem(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long itemId) {
         return service.findItem(itemId);
     }
 
@@ -47,13 +47,13 @@ public class ItemController {
     }
 
     @PostMapping()
-    public ItemDto saveItem(@RequestHeader("X-Sharer-User-Id") Long userId, @Valid @RequestBody Item item) {
+    public ItemDto saveItem(@RequestHeader("X-Sharer-User-Id") long userId, @Valid @RequestBody Item item) {
         item.setOwnerId(userId);
         return service.saveItem(userId, item);
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto updateItem(@RequestHeader("X-Sharer-User-Id") Long userId, @PathVariable Long itemId,
+    public ItemDto updateItem(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long itemId,
                               @RequestBody Item item) {
         if ((item.getId() != null) && (item.getId() != itemId)) {
             String message = "В запросе не совпадают itemId в body и URI:\nPathVariable itemId: " + itemId +
@@ -66,7 +66,7 @@ public class ItemController {
     }
 
     @DeleteMapping("/{itemId}")
-    public ResponseFormat deleteItem(@RequestHeader("X-Sharer-User-Id") Long userId, @PathVariable Long itemId) {
+    public ResponseFormat deleteItem(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long itemId) {
         return service.deleteItem(userId, itemId);
     }
 }

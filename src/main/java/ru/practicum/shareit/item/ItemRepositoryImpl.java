@@ -58,7 +58,7 @@ public class ItemRepositoryImpl implements ItemRepository {
     public ItemDto updateItem(long userId, Item item) {
         checkItemExists(userId, item.getId());
         Item updatedItem = items.stream()
-                .filter(i -> (i.getOwnerId() == userId) && (i.getId() == item.getId()))
+                .filter(i -> (i.getOwnerId() == userId) && (i.getId().equals(item.getId())))
                 .findFirst()
                 .get();
         if (item.getName() != null) {
