@@ -7,9 +7,7 @@ import ru.practicum.shareit.item.model.Item;
 import java.util.List;
 
 public interface ItemService {
-    List<ItemDto> findAllItems();
-
-    List<ItemDto> findItemsByUserId(long userId);
+    List<ItemDto> findItems(Long userId);
 
     ItemDto findItem(long itemId);
 

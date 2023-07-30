@@ -2,14 +2,12 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.exception.ResponseFormat;
-import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 
 import javax.validation.Valid;
 import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -19,21 +17,17 @@ public class ItemController {
     private final ItemService service;
 
     @GetMapping()
-    public List<ItemDto> findItems(@RequestHeader(name = "X-Sharer-User-Id", required = false) Long userId) {
-        if (userId == null) {
-            return service.findAllItems();
-        } else {
-            return service.findItemsByUserId(userId);
-        }
+    public ResponseEntity findItems(@RequestHeader(name = "X-Sharer-User-Id", required = false) Long userId) {
+        return ResponseEntity.ok().body(service.findItems(userId));
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto findItem(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long itemId) {
-        return service.findItem(itemId);
+    public ResponseEntity findItem(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long itemId) {
+        return ResponseEntity.ok().body(service.findItem(itemId));
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchItems(
+    public ResponseEntity searchItems(
             @RequestParam(required = false) String text) {
         if (text == null) {
             String message = "Отсутствует параметр запроса";
@@ -41,20 +35,20 @@ public class ItemController {
             throw new RuntimeException(message);
         }
         if (text.isEmpty()) {
-            return new ArrayList<>();
+            return ResponseEntity.ok().body(new ArrayList<>());
         }
-        return service.searchItems(text);
+        return ResponseEntity.ok().body(service.searchItems(text));
     }
 
     @PostMapping()
-    public ItemDto saveItem(@RequestHeader("X-Sharer-User-Id") long userId, @Valid @RequestBody Item item) {
+    public ResponseEntity saveItem(@RequestHeader("X-Sharer-User-Id") long userId, @Valid @RequestBody Item item) {
         item.setOwnerId(userId);
-        return service.saveItem(userId, item);
+        return ResponseEntity.ok().body(service.saveItem(userId, item));
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto updateItem(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long itemId,
-                              @RequestBody Item item) {
+    public ResponseEntity updateItem(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long itemId,
+                                     @RequestBody Item item) {
         if ((item.getId() != null) && (item.getId() != itemId)) {
             String message = "В запросе не совпадают itemId в body и URI:\nPathVariable itemId: " + itemId +
                     "\nbody itemId: " + item.getId();
@@ -62,11 +56,11 @@ public class ItemController {
             throw new RuntimeException();
         }
         item.setId(itemId);
-        return service.updateItem(userId, item);
+        return ResponseEntity.ok().body(service.updateItem(userId, item));
     }
 
     @DeleteMapping("/{itemId}")
-    public ResponseFormat deleteItem(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long itemId) {
-        return service.deleteItem(userId, itemId);
+    public ResponseEntity deleteItem(@RequestHeader("X-Sharer-User-Id") long userId, @PathVariable long itemId) {
+        return ResponseEntity.ok().body(service.deleteItem(userId, itemId));
     }
 }

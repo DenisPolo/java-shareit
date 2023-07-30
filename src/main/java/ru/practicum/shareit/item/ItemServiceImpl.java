@@ -20,16 +20,14 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
 
     @Override
-    public List<ItemDto> findAllItems() {
-        log.info("Запрос списка всех вещей");
-        return itemRepository.findAllItems();
-    }
-
-    @Override
-    public List<ItemDto> findItemsByUserId(long userId) {
-        log.info("Запрос списка всех вещей пользователя с id: " + userId);
-        checkUserExists(userId);
-        return itemRepository.findItemsByUserId(userId);
+    public List<ItemDto> findItems(Long userId) {
+        if (userId == null) {
+            log.info("Запрос списка всех вещей");
+            return itemRepository.findAllItems();
+        } else {
+            log.info("Запрос списка всех вещей пользователя с ID: " + userId);
+            return itemRepository.findItemsByUserId(userId);
+        }
     }
 
     @Override
