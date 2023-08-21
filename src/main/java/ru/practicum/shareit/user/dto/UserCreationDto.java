@@ -1,15 +1,12 @@
-package ru.practicum.shareit.user;
+package ru.practicum.shareit.user.dto;
 
-import lombok.Builder;
 import lombok.Data;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 
 @Data
-@Builder
-public class User {
-    private Long id;
+public class UserCreationDto {
 
     @NotBlank(message = "Email не должен быть пустым")
     @Email(message = "Email не соответстует формату адреса электронной почты")

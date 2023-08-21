@@ -1,16 +1,14 @@
 package ru.practicum.shareit.item.dto;
 
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-@Builder
+@AllArgsConstructor
 public class ItemDto {
     private Long id;
-
     private String name;
-
     private String description;
-
-    private boolean available;
+    private Boolean available;
+    private String creationDate;
 }

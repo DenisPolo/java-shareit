@@ -9,15 +9,16 @@ import java.time.LocalDateTime;
 
 @ToString
 @Getter
-public class ResponseFormat {
+public class ErrorResponseFormat {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private final LocalDateTime time = LocalDateTime.now();
     private final HttpStatus status;
-    private final String message;
 
-    public ResponseFormat(String message, HttpStatus status) {
-        this.message = message;
+    private final String error;
+
+    public ErrorResponseFormat(String message, HttpStatus status) {
+        this.error = message;
         this.status = status;
     }
 }
