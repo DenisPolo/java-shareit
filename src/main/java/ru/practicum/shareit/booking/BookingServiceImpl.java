@@ -10,9 +10,9 @@ import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.responseFormat.ResponseFormat;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.responseFormat.ResponseFormat;
 import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
@@ -32,14 +32,16 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingDto> findBookingsForUser(long userId, QueryState state) {
+    public List<BookingDto> findBookingsForUser(long userId, String state) {
         log.info("Запрос списка бронирования вещей пользователем с ID: " + userId);
+
+        QueryState queryState = Enum.valueOf(QueryState.class, state);
 
         checkUserExists(userId);
 
         List<Booking> bookings = new ArrayList<>();
 
-        switch (state) {
+        switch (queryState) {
             case ALL:
                 bookings = bookingRepository.findBookingsForUser(userId);
                 break;
@@ -70,19 +72,21 @@ public class BookingServiceImpl implements BookingService {
                 break;
         }
 
-        return BookingMapper.mapToBookingDto(bookings);
+        return BookingMapper.INSTANCE.mapToBookingDto(bookings);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingDto> findBookingsForOwner(long ownerId, QueryState state) {
+    public List<BookingDto> findBookingsForOwner(long ownerId, String state) {
         log.info("Запрос списка бронирования вещей владельца с ID: " + ownerId);
+
+        QueryState queryState = Enum.valueOf(QueryState.class, state);
 
         checkUserExists(ownerId);
 
         List<Booking> bookings = new ArrayList<>();
 
-        switch (state) {
+        switch (queryState) {
             case ALL:
                 bookings = bookingRepository.findBookingsForOwner(ownerId);
                 break;
@@ -113,7 +117,7 @@ public class BookingServiceImpl implements BookingService {
                 break;
         }
 
-        return BookingMapper.mapToBookingDto(bookings);
+        return BookingMapper.INSTANCE.mapToBookingDto(bookings);
     }
 
     @Override
@@ -125,7 +129,7 @@ public class BookingServiceImpl implements BookingService {
                 .orElseThrow(() -> new NotFoundException("Бронирование с ID: " + bookingId + " не существует"));
 
         if (userId == booking.getItem().getOwner().getId() || userId == booking.getBooker().getId()) {
-            return BookingMapper.mapToBookingDto(booking);
+            return BookingMapper.INSTANCE.mapToBookingDto(booking);
         } else {
             String message = "Пользователь с ID: " + userId + " не является владельцем или арендатором";
 
@@ -174,9 +178,9 @@ public class BookingServiceImpl implements BookingService {
 
         checkingForNonIntersections(bookingCreationDto);
 
-        Booking booking = BookingMapper.mapToNewBooking(bookingCreationDto, booker, item);
+        Booking booking = BookingMapper.INSTANCE.mapToNewBooking(bookingCreationDto, booker, item);
 
-        return BookingMapper.mapToBookingDto(bookingRepository.save(booking));
+        return BookingMapper.INSTANCE.mapToBookingDto(bookingRepository.save(booking));
     }
 
     @Override
@@ -210,7 +214,7 @@ public class BookingServiceImpl implements BookingService {
             updatedBooking.setStatus(BookingStatus.REJECTED);
         }
 
-        return BookingMapper.mapToBookingDto(bookingRepository.save(updatedBooking));
+        return BookingMapper.INSTANCE.mapToBookingDto(bookingRepository.save(updatedBooking));
     }
 
     @Override

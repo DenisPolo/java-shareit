@@ -1,13 +1,16 @@
 package ru.practicum.shareit.item.model;
 
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
-import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Objects;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @Entity
 @Table(name = "items", schema = "public")
@@ -31,12 +34,22 @@ public class Item {
     private Boolean available;
 
     @Column(name = "creation_date")
-    private Instant creationDate = Instant.now();
+    private LocalDateTime creationDate = LocalDateTime.now();
 
-    public Item(User owner, String name, String description, Boolean available) {
-        this.owner = owner;
-        this.name = name;
-        this.description = description;
-        this.available = available;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Item item = (Item) o;
+        return id.equals(item.id)
+                && owner.equals(item.owner)
+                && name.equals(item.name)
+                && description.equals(item.description)
+                && available.equals(item.available);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, owner, name, description, available);
     }
 }

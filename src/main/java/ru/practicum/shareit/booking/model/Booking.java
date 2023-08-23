@@ -1,15 +1,18 @@
 package ru.practicum.shareit.booking.model;
 
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @Entity
 @Table(name = "bookings", schema = "public")
@@ -39,11 +42,21 @@ public class Booking {
     @Column(name = "creation_date")
     private LocalDateTime creationDate = LocalDateTime.now();
 
-    public Booking(LocalDateTime start, LocalDateTime end, User booker, Item item, BookingStatus status) {
-        this.start = start;
-        this.end = end;
-        this.booker = booker;
-        this.item = item;
-        this.status = status;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Booking booking = (Booking) o;
+        return id.equals(booking.id)
+                && start.equals(booking.start)
+                && end.equals(booking.end)
+                && booker.equals(booking.booker)
+                && item.equals(booking.item)
+                && status == booking.status;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, start, end, booker, item, status);
     }
 }

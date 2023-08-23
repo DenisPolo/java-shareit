@@ -67,14 +67,14 @@ public class ItemServiceImpl implements ItemService {
 
         Map<Long, List<CommentDto>> commentsByItemIds = comments.stream()
                 .collect(Collectors.groupingBy(Comment::getItemId, Collectors
-                        .mapping(CommentMapper::mapToCommentDto, Collectors.toList())));
+                        .mapping(CommentMapper.INSTANCE::mapToCommentDto, Collectors.toList())));
 
         Map<Long, List<Booking>> bookingsByItemIds = bookings.stream()
                 .collect(Collectors.groupingBy(((b) -> b.getItem().getId())));
 
         return items
                 .stream()
-                .map((i) -> ItemMapper.mapToItemWithBookingsDto(i, bookingsByItemIds.get(i.getId())))
+                .map((i) -> ItemMapper.INSTANCE.mapToItemWithBookingsDto(i, bookingsByItemIds.get(i.getId())))
                 .peek(i -> i.setComments(commentsByItemIds.get(i.getId())))
                 .collect(Collectors.toList());
     }
@@ -97,19 +97,20 @@ public class ItemServiceImpl implements ItemService {
         }
 
         List<CommentDto> comments = commentRepository.findCommentByItemId(itemId)
-                .stream().map(CommentMapper::mapToCommentDto)
+                .stream().map(CommentMapper.INSTANCE::mapToCommentDto)
                 .collect(Collectors.toList());
 
         if (item.getOwner().getId() == userId) {
             List<Booking> bookings = bookingRepository.findBookingsForItem(itemId);
 
-            ItemWithBookingsDto itemWithBookingsDto = ItemMapper.mapToItemWithBookingsDto(item, bookings);
+            ItemWithBookingsDto itemWithBookingsDto = ItemMapper.INSTANCE.mapToItemWithBookingsDto(item, bookings);
 
             itemWithBookingsDto.setComments(comments);
 
             return itemWithBookingsDto;
         } else {
-            ItemWithBookingsDto itemWithBookingsDto = ItemMapper.mapToItemWithBookingsDto(item, new ArrayList<>());
+            ItemWithBookingsDto itemWithBookingsDto = ItemMapper.INSTANCE
+                    .mapToItemWithBookingsDto(item, new ArrayList<>());
 
             itemWithBookingsDto.setComments(comments);
 
@@ -122,22 +123,39 @@ public class ItemServiceImpl implements ItemService {
     public List<ItemDto> searchItems(String text) {
         log.info("Поиск вещей по запросу: " + text);
 
+        if (text == null) {
+            String message = "Отсутствует параметр запроса";
+
+            log.info(message);
+
+            throw new BadRequestException(message);
+        }
+
+        if (text.isEmpty()) {
+            return new ArrayList<>();
+        }
+
         List<Item> items =
                 itemRepository.findDistinctItemByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(text, text);
 
-        return ItemMapper.mapToItemDto(items);
+        return ItemMapper.INSTANCE.mapToItemDto(items)
+                .stream()
+                .filter(ItemDto::getAvailable)
+                .collect(Collectors.toList());
     }
 
     @Override
     public ItemDto saveItem(long userId, ItemCreationDto itemCreationDto) {
         log.info("Запрос добавления новой вещи от пользователя с id: " + userId);
 
+        itemCreationDto.setOwnerId(userId);
+
         User owner = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с ID: "
                 + userId + " не существует"));
 
-        Item item = ItemMapper.mapToNewItem(itemCreationDto, owner);
+        Item item = ItemMapper.INSTANCE.mapToNewItem(itemCreationDto, owner);
 
-        return ItemMapper.mapToItemDto(itemRepository.save(item));
+        return ItemMapper.INSTANCE.mapToItemDto(itemRepository.save(item));
     }
 
     @Override
@@ -158,12 +176,24 @@ public class ItemServiceImpl implements ItemService {
             throw new BadRequestException(message);
         }
 
-        return CommentMapper.mapToCommentDto(commentRepository.save(new Comment(author, itemId, comment.getText())));
+        return CommentMapper.INSTANCE
+                .mapToCommentDto(commentRepository.save(new Comment(author, itemId, comment.getText())));
     }
 
     @Override
-    public ItemDto updateItem(long userId, ItemCreationDto itemCreationDto) {
+    public ItemDto updateItem(long userId, long itemId, ItemCreationDto itemCreationDto) {
         log.info("Запрос обновления данных вещи с id: " + itemCreationDto.getId() + " от пользователя с id: " + userId);
+
+        if ((itemCreationDto.getId() != null) && (itemCreationDto.getId() != itemId)) {
+            String message = "В запросе не совпадают itemId в body и URI:\nPathVariable itemId: " + itemId +
+                    "\nbody itemId: " + itemCreationDto.getId();
+
+            log.info(message);
+
+            throw new BadRequestException(message);
+        }
+
+        itemCreationDto.setId(itemId);
 
         checkUserExists(userId);
 
@@ -190,7 +220,7 @@ public class ItemServiceImpl implements ItemService {
             updatableItem.setAvailable(itemCreationDto.getAvailable());
         }
 
-        return ItemMapper.mapToItemDto(itemRepository.save(updatableItem));
+        return ItemMapper.INSTANCE.mapToItemDto(itemRepository.save(updatableItem));
     }
 
     @Override

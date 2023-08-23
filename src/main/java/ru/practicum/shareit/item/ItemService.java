@@ -20,7 +20,7 @@ public interface ItemService {
 
     CommentDto postComment(long userId, long itemId, CommentCreationDto comment);
 
-    ItemDto updateItem(long userId, ItemCreationDto itemCreationDto);
+    ItemDto updateItem(long userId, long itemId, ItemCreationDto itemCreationDto);
 
     ResponseFormat deleteItem(long userId, long itemId);
 }

@@ -1,59 +1,33 @@
 package ru.practicum.shareit.booking;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 import ru.practicum.shareit.booking.dto.BookingCreationDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingForItemDto;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.item.ItemMapper;
-import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.UserMapper;
-import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.model.User;
 
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
-public class BookingMapper {
-    public static BookingDto mapToBookingDto(Booking booking) {
-        String creationDate = DateTimeFormatter
-                .ofPattern("yyyy.MM.dd hh:mm:ss")
-                .withZone(ZoneOffset.UTC)
-                .format(booking.getCreationDate());
+@Mapper(uses = {UserMapper.class})
+public interface BookingMapper {
 
-        UserDto booker = UserMapper.mapToUserDto(booking.getBooker());
+    BookingMapper INSTANCE = Mappers.getMapper(BookingMapper.class);
 
-        ItemDto item = ItemMapper.mapToItemDto(booking.getItem());
+    @Mapping(source = "creationDate", target = "creationDate", dateFormat = "yyyy.MM.dd hh:mm:ss")
+    BookingDto mapToBookingDto(Booking booking);
 
-        return new BookingDto(booking.getId(), booking.getStart(), booking.getEnd(), booker, item, booking.getStatus(),
-                creationDate);
-    }
+    List<BookingDto> mapToBookingDto(Iterable<Booking> bookings);
 
-    public static List<BookingDto> mapToBookingDto(Iterable<Booking> bookings) {
-        List<BookingDto> result = new ArrayList<>();
+    @Mapping(source = "bookingDto.id", target = "id")
+    @Mapping(source = "booker", target = "booker")
+    @Mapping(source = "item", target = "item")
+    Booking mapToNewBooking(BookingCreationDto bookingDto, User booker, Item item);
 
-        for (Booking booking : bookings) {
-            result.add(mapToBookingDto(booking));
-        }
-
-        return result;
-    }
-
-    public static Booking mapToNewBooking(BookingCreationDto bookingDto, User booker, Item item) {
-        return new Booking(bookingDto.getStart(), bookingDto.getEnd(), booker, item, bookingDto.getStatus());
-    }
-
-    public static BookingForItemDto mapToBookingForItemDto(Booking booking) {
-        String creationDate = DateTimeFormatter
-                .ofPattern("yyyy.MM.dd hh:mm:ss")
-                .withZone(ZoneOffset.UTC)
-                .format(booking.getCreationDate());
-
-        Long booker = booking.getBooker().getId();
-
-        return new BookingForItemDto(booking.getId(), booking.getStart(), booking.getEnd(), booker,
-                booking.getStatus(), creationDate);
-    }
+    @Mapping(source = "booker.id", target = "bookerId")
+    BookingForItemDto mapToBookingForItemDto(Booking booking);
 }

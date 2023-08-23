@@ -22,16 +22,14 @@ public class BookingController {
     public ResponseEntity<List<BookingDto>> findBookingsForUser(
             @RequestHeader(name = "X-Sharer-User-Id") long userId,
             @RequestParam(defaultValue = "ALL", required = false) String state) {
-        QueryState queryState = Enum.valueOf(QueryState.class, state);
-        return ResponseEntity.ok().body(service.findBookingsForUser(userId, queryState));
+        return ResponseEntity.ok().body(service.findBookingsForUser(userId, state));
     }
 
     @GetMapping("/owner")
     public ResponseEntity<List<BookingDto>> findBookingsForOwner(
             @RequestHeader(name = "X-Sharer-User-Id") long ownerId,
             @RequestParam(defaultValue = "ALL", required = false) String state) {
-        QueryState queryState = Enum.valueOf(QueryState.class, state);
-        return ResponseEntity.ok().body(service.findBookingsForOwner(ownerId, queryState));
+        return ResponseEntity.ok().body(service.findBookingsForOwner(ownerId, state));
     }
 
     @GetMapping("/{bookingId}")

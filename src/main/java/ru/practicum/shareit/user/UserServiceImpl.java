@@ -29,7 +29,7 @@ public class UserServiceImpl implements UserService {
 
         List<User> users = repository.findAll();
 
-        return UserMapper.mapToUserDto(users);
+        return UserMapper.INSTANCE.mapToUserDto(users);
     }
 
     @Transactional(readOnly = true)
@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
 
         User user = getUserIfExists(userId);
 
-        return UserMapper.mapToUserDto(user);
+        return UserMapper.INSTANCE.mapToUserDto(user);
     }
 
     @Override
@@ -47,9 +47,9 @@ public class UserServiceImpl implements UserService {
         log.info("Запрос добавления нового пользователя с Email: " + userCreationDto.getEmail() +
                 ", Name: " + userCreationDto.getName());
 
-        User user = UserMapper.mapToNewUser(userCreationDto);
+        User user = UserMapper.INSTANCE.mapToNewUser(userCreationDto);
 
-        return UserMapper.mapToUserDto(repository.save(user));
+        return UserMapper.INSTANCE.mapToUserDto(repository.save(user));
     }
 
     @Override
@@ -83,7 +83,7 @@ public class UserServiceImpl implements UserService {
             updatableUser.setName(userCreationDto.getName());
         }
 
-        return UserMapper.mapToUserDto(repository.save(updatableUser));
+        return UserMapper.INSTANCE.mapToUserDto(repository.save(updatableUser));
     }
 
     @Override

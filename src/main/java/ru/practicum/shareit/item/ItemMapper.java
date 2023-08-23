@@ -1,5 +1,8 @@
 package ru.practicum.shareit.item;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 import ru.practicum.shareit.booking.BookingMapper;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.dto.BookingForItemDto;
@@ -18,30 +21,17 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-public class ItemMapper {
+@Mapper
+public interface ItemMapper {
 
-    public static ItemDto mapToItemDto(Item item) {
-        String creationDate = DateTimeFormatter
-                .ofPattern("yyyy.MM.dd hh:mm:ss")
-                .withZone(ZoneOffset.UTC)
-                .format(item.getCreationDate());
+    ItemMapper INSTANCE = Mappers.getMapper(ItemMapper.class);
 
-        return new ItemDto(item.getId(), item.getName(), item.getDescription(), item.getAvailable(), creationDate);
-    }
+    @Mapping(source = "creationDate", target = "creationDate", dateFormat = "yyyy.MM.dd hh:mm:ss")
+    ItemDto mapToItemDto(Item item);
 
-    public static List<ItemDto> mapToItemDto(Iterable<Item> items) {
-        List<ItemDto> result = new ArrayList<>();
+    List<ItemDto> mapToItemDto(Iterable<Item> items);
 
-        for (Item item : items) {
-            if (item.getAvailable()) {
-                result.add(mapToItemDto(item));
-            }
-        }
-
-        return result;
-    }
-
-    public static ItemWithBookingsDto mapToItemWithBookingsDto(Item item, List<Booking> itemBookings) {
+    default ItemWithBookingsDto mapToItemWithBookingsDto(Item item, List<Booking> itemBookings) {
         String creationDate = DateTimeFormatter
                 .ofPattern("yyyy.MM.dd hh:mm:ss")
                 .withZone(ZoneOffset.UTC)
@@ -55,14 +45,16 @@ public class ItemMapper {
                 .stream()
                 .filter(b -> b.getStatus().equals(BookingStatus.APPROVED) && b.getStart().isAfter(LocalDateTime.now()))
                 .min(Comparator.comparing(Booking::getStart));
-        BookingForItemDto lastBooking = (last.isEmpty()) ? null : BookingMapper.mapToBookingForItemDto(last.get());
-        BookingForItemDto nextBooking = (next.isEmpty()) ? null : BookingMapper.mapToBookingForItemDto(next.get());
+        BookingForItemDto lastBooking = (last.isEmpty()) ? null : BookingMapper.INSTANCE
+                .mapToBookingForItemDto(last.get());
+        BookingForItemDto nextBooking = (next.isEmpty()) ? null : BookingMapper.INSTANCE
+                .mapToBookingForItemDto(next.get());
 
         return new ItemWithBookingsDto(item.getId(), item.getName(), item.getDescription(), item.getAvailable(),
                 lastBooking, nextBooking, new ArrayList<>(), creationDate);
     }
 
-    public static Item mapToNewItem(ItemCreationDto itemDto, User owner) {
-        return new Item(owner, itemDto.getName(), itemDto.getDescription(), itemDto.getAvailable());
-    }
+    @Mapping(source = "itemDto.id", target = "id")
+    @Mapping(source = "itemDto.name", target = "name")
+    Item mapToNewItem(ItemCreationDto itemDto, User owner);
 }
