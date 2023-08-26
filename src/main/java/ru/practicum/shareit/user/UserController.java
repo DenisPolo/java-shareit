@@ -3,8 +3,12 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.responseFormat.ResponseFormat;
+import ru.practicum.shareit.user.dto.UserCreationDto;
+import ru.practicum.shareit.user.dto.UserDto;
 
 import javax.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping(path = "/users")
@@ -12,28 +16,29 @@ import javax.validation.Valid;
 public class UserController {
     private final UserService service;
 
-    @GetMapping()
-    public ResponseEntity getAllUsers() {
+    @GetMapping
+    public ResponseEntity<List<UserDto>> getAllUsers() {
         return ResponseEntity.ok().body(service.getAllUsers());
     }
 
     @GetMapping("/{userId}")
-    public ResponseEntity getUserById(@PathVariable Long userId) {
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long userId) {
         return ResponseEntity.ok().body(service.getUserById(userId));
     }
 
-    @PostMapping()
-    public ResponseEntity createUser(@Valid @RequestBody User user) {
-        return ResponseEntity.ok().body(service.createUser(user));
+    @PostMapping
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody UserCreationDto userCreationDto) {
+        return ResponseEntity.ok().body(service.createUser(userCreationDto));
     }
 
     @PatchMapping("/{userId}")
-    public ResponseEntity updateUser(@PathVariable Long userId, @RequestBody User user) {
-        return ResponseEntity.ok().body(service.updateUser(userId, user.getEmail(), user.getName()));
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long userId,
+                                              @RequestBody UserCreationDto userCreationDto) {
+        return ResponseEntity.ok().body(service.updateUser(userId, userCreationDto));
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity deleteUser(@PathVariable Long userId) {
+    public ResponseEntity<ResponseFormat> deleteUser(@PathVariable Long userId) {
         return ResponseEntity.ok().body(service.deleteUser(userId));
     }
 }

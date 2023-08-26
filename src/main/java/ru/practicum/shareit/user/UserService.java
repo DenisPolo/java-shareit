@@ -1,17 +1,19 @@
 package ru.practicum.shareit.user;
 
-import ru.practicum.shareit.exception.ResponseFormat;
+import ru.practicum.shareit.responseFormat.ResponseFormat;
+import ru.practicum.shareit.user.dto.UserCreationDto;
+import ru.practicum.shareit.user.dto.UserDto;
 
 import java.util.List;
 
 public interface UserService {
-    List<User> getAllUsers();
+    List<UserDto> getAllUsers();
 
-    User getUserById(long userId);
+    UserDto getUserById(long userId);
 
-    User createUser(User user);
+    UserDto createUser(UserCreationDto userCreationDto);
 
-    User updateUser(long userId, String email, String name);
+    UserDto updateUser(long userId, UserCreationDto userCreationDto);
 
     ResponseFormat deleteUser(long userId);
 }
