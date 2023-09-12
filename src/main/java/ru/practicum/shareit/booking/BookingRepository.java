@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -29,14 +30,14 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "JOIN booking.booker AS b " +
             "WHERE b.id = ?1 " +
             "ORDER BY booking.start DESC")
-    List<Booking> findBookingsForUser(long userId);
+    List<Booking> findBookingsForUser(long userId, PageRequest page);
 
     @Query("SELECT booking " +
             "FROM Booking AS booking " +
             "JOIN booking.booker AS b " +
             "WHERE b.id = ?1 AND booking.status = ?2 " +
             "ORDER BY booking.start DESC")
-    List<Booking> findBookingsByStatusForUser(long userId, BookingStatus status);
+    List<Booking> findBookingsByStatusForUser(long userId, BookingStatus status, PageRequest page);
 
     @Query("SELECT booking " +
             "FROM Booking AS booking " +
@@ -44,7 +45,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "JOIN i.owner AS o " +
             "WHERE o.id = ?1 " +
             "ORDER BY booking.start DESC")
-    List<Booking> findBookingsForOwner(long userId);
+    List<Booking> findBookingsForOwner(long userId, PageRequest page);
 
     @Query("SELECT booking " +
             "FROM Booking AS booking " +
@@ -52,5 +53,5 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "JOIN i.owner AS o " +
             "WHERE o.id = ?1 AND booking.status = ?2 " +
             "ORDER BY booking.start DESC")
-    List<Booking> findBookingsByStatusForOwner(long ownerId, BookingStatus status);
+    List<Booking> findBookingsByStatusForOwner(long ownerId, BookingStatus status, PageRequest page);
 }

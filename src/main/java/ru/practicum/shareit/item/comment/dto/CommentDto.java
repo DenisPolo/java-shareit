@@ -19,9 +19,9 @@ public class CommentDto {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CommentDto that = (CommentDto) o;
-        return id.equals(that.id)
-                && authorName.equals(that.authorName)
-                && text.equals(that.text);
+        return Objects.equals(id, that.id)
+                && Objects.equals(authorName, that.authorName)
+                && Objects.equals(text, that.text);
     }
 
     @Override

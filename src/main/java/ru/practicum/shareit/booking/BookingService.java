@@ -7,9 +7,9 @@ import ru.practicum.shareit.responseFormat.ResponseFormat;
 import java.util.List;
 
 public interface BookingService {
-    List<BookingDto> findBookingsForUser(long userId, String status);
+    List<BookingDto> findBookingsForUser(long userId, String status, int from, int size);
 
-    List<BookingDto> findBookingsForOwner(long ownerId, String status);
+    List<BookingDto> findBookingsForOwner(long ownerId, String status, int from, int size);
 
     BookingDto findBooking(long userId, long bookingId);
 

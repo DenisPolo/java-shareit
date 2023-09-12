@@ -8,6 +8,7 @@ import ru.practicum.shareit.item.comment.dto.CommentCreationDto;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemCreationDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemForItemRequestDto;
 import ru.practicum.shareit.item.dto.ItemWithBookingsDto;
 import ru.practicum.shareit.responseFormat.ResponseFormat;
 
@@ -22,9 +23,11 @@ public class ItemController {
     private final ItemService service;
 
     @GetMapping
-    public ResponseEntity<List<ItemWithBookingsDto>> findItems(@RequestHeader(name = "X-Sharer-User-Id",
-            required = false) Long userId) {
-        return ResponseEntity.ok().body(service.findItems(userId));
+    public ResponseEntity<List<ItemWithBookingsDto>> findItems(
+            @RequestHeader(name = "X-Sharer-User-Id", required = false) Long userId,
+            @RequestParam(defaultValue = "0") int from,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok().body(service.findItems(userId, from, size));
     }
 
     @GetMapping("/{itemId}")
@@ -34,13 +37,15 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<ItemDto>> searchItems(@RequestParam(required = false) String text) {
-        return ResponseEntity.ok().body(service.searchItems(text));
+    public ResponseEntity<List<ItemDto>> searchItems(@RequestParam(required = false) String text,
+                                                     @RequestParam(defaultValue = "0") int from,
+                                                     @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok().body(service.searchItems(text, from, size));
     }
 
     @PostMapping
-    public ResponseEntity<ItemDto> saveItem(@RequestHeader("X-Sharer-User-Id") long userId,
-                                            @Valid @RequestBody ItemCreationDto itemCreationDto) {
+    public ResponseEntity<ItemForItemRequestDto> saveItem(@RequestHeader("X-Sharer-User-Id") long userId,
+                                                          @Valid @RequestBody ItemCreationDto itemCreationDto) {
         return ResponseEntity.ok().body(service.saveItem(userId, itemCreationDto));
     }
 

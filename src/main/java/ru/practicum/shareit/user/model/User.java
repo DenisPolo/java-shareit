@@ -1,5 +1,6 @@
 package ru.practicum.shareit.user.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,6 +12,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "users", schema = "public")
 public class User {
@@ -33,9 +35,9 @@ public class User {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return id.equals(user.id)
-                && email.equals(user.email)
-                && name.equals(user.name);
+        return Objects.equals(id, user.id)
+                && Objects.equals(email, user.email)
+                && Objects.equals(name, user.name);
     }
 
     @Override

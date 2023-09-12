@@ -2,6 +2,7 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import ru.practicum.shareit.item.comment.dto.CommentDto;
 import ru.practicum.shareit.item.comment.model.Comment;
 import ru.practicum.shareit.item.dto.ItemCreationDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemForItemRequestDto;
 import ru.practicum.shareit.item.dto.ItemWithBookingsDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.responseFormat.ResponseFormat;
@@ -23,10 +25,7 @@ import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -40,7 +39,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<ItemWithBookingsDto> findItems(Long userId) {
+    public List<ItemWithBookingsDto> findItems(Long userId, int from, int size) {
+        PageRequest page = getPage(from, size);
+
         List<Item> items;
         List<Comment> comments;
         List<Booking> bookings;
@@ -48,22 +49,18 @@ public class ItemServiceImpl implements ItemService {
         if (userId == null) {
             log.info("Запрос списка всех вещей");
 
-            items = itemRepository.findAll();
-
-            comments = commentRepository.findAll();
-
-            bookings = bookingRepository.findAll();
+            items = itemRepository.findAll(page).toList();
         } else {
             log.info("Запрос списка всех вещей пользователя с ID: " + userId);
 
-            items = itemRepository.findItemsByOwnerId(userId);
-
-            List<Long> itemIds = items.stream().map(Item::getId).collect(Collectors.toList());
-
-            comments = (itemIds.isEmpty()) ? new ArrayList<>() : commentRepository.findCommentByItemIdIn(itemIds);
-
-            bookings = (itemIds.isEmpty()) ? new ArrayList<>() : bookingRepository.findBookingsForItemIn(itemIds);
+            items = itemRepository.findItemsByOwnerId(userId, page);
         }
+
+        List<Long> itemIds = items.stream().map(Item::getId).collect(Collectors.toList());
+
+        comments = (itemIds.isEmpty()) ? new ArrayList<>() : commentRepository.findCommentByItemIdIn(itemIds);
+
+        bookings = (itemIds.isEmpty()) ? new ArrayList<>() : bookingRepository.findBookingsForItemIn(itemIds);
 
         Map<Long, List<CommentDto>> commentsByItemIds = comments.stream()
                 .collect(Collectors.groupingBy(Comment::getItemId, Collectors
@@ -76,6 +73,7 @@ public class ItemServiceImpl implements ItemService {
                 .stream()
                 .map((i) -> ItemMapper.INSTANCE.mapToItemWithBookingsDto(i, bookingsByItemIds.get(i.getId())))
                 .peek(i -> i.setComments(commentsByItemIds.get(i.getId())))
+                .sorted(Comparator.comparing(ItemWithBookingsDto::getId))
                 .collect(Collectors.toList());
     }
 
@@ -89,7 +87,7 @@ public class ItemServiceImpl implements ItemService {
         Item item = getItemIfExists(itemId);
 
         if (!item.getAvailable() && (item.getOwner().getId() != userId)) {
-            String message = "В данныймомент вещь с ID: " + item.getId() + " не доступена";
+            String message = "В данный момент вещь с ID: " + item.getId() + " не доступена";
 
             log.info(message);
 
@@ -100,28 +98,28 @@ public class ItemServiceImpl implements ItemService {
                 .stream().map(CommentMapper.INSTANCE::mapToCommentDto)
                 .collect(Collectors.toList());
 
+        ItemWithBookingsDto itemWithBookingsDto;
+
         if (item.getOwner().getId() == userId) {
             List<Booking> bookings = bookingRepository.findBookingsForItem(itemId);
 
-            ItemWithBookingsDto itemWithBookingsDto = ItemMapper.INSTANCE.mapToItemWithBookingsDto(item, bookings);
-
-            itemWithBookingsDto.setComments(comments);
-
-            return itemWithBookingsDto;
+            itemWithBookingsDto = ItemMapper.INSTANCE.mapToItemWithBookingsDto(item, bookings);
         } else {
-            ItemWithBookingsDto itemWithBookingsDto = ItemMapper.INSTANCE
+            itemWithBookingsDto = ItemMapper.INSTANCE
                     .mapToItemWithBookingsDto(item, new ArrayList<>());
-
-            itemWithBookingsDto.setComments(comments);
-
-            return itemWithBookingsDto;
         }
+
+        itemWithBookingsDto.setComments(comments);
+
+        return itemWithBookingsDto;
     }
 
     @Transactional(readOnly = true)
     @Override
-    public List<ItemDto> searchItems(String text) {
+    public List<ItemDto> searchItems(String text, int from, int size) {
         log.info("Поиск вещей по запросу: " + text);
+
+        PageRequest page = getPage(from, size);
 
         if (text == null) {
             String message = "Отсутствует параметр запроса";
@@ -131,12 +129,13 @@ public class ItemServiceImpl implements ItemService {
             throw new BadRequestException(message);
         }
 
-        if (text.isEmpty()) {
+        if (text.isBlank()) {
             return new ArrayList<>();
         }
 
         List<Item> items =
-                itemRepository.findDistinctItemByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(text, text);
+                itemRepository
+                        .findDistinctItemByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(text, text, page);
 
         return ItemMapper.INSTANCE.mapToItemDto(items)
                 .stream()
@@ -145,7 +144,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto saveItem(long userId, ItemCreationDto itemCreationDto) {
+    public ItemForItemRequestDto saveItem(long userId, ItemCreationDto itemCreationDto) {
         log.info("Запрос добавления новой вещи от пользователя с id: " + userId);
 
         itemCreationDto.setOwnerId(userId);
@@ -155,7 +154,7 @@ public class ItemServiceImpl implements ItemService {
 
         Item item = ItemMapper.INSTANCE.mapToNewItem(itemCreationDto, owner);
 
-        return ItemMapper.INSTANCE.mapToItemDto(itemRepository.save(item));
+        return ItemMapper.INSTANCE.mapToItemForItemRequestDto(itemRepository.save(item));
     }
 
     @Override
@@ -220,16 +219,21 @@ public class ItemServiceImpl implements ItemService {
             updatableItem.setAvailable(itemCreationDto.getAvailable());
         }
 
+        if (itemCreationDto.getRequestId() != null) {
+            updatableItem.setRequestId(itemCreationDto.getRequestId());
+        }
+
         return ItemMapper.INSTANCE.mapToItemDto(itemRepository.save(updatableItem));
     }
 
     @Override
     public ResponseFormat deleteItem(long userId, long itemId) {
         checkUserExists(userId);
+        getItemIfExists(itemId);
 
         itemRepository.deleteById(itemId);
 
-        if (itemRepository.findItemsByOwnerIdAndItemId(userId, itemId).isEmpty()) {
+        if (itemRepository.findItemByOwnerIdAndItemId(userId, itemId).isEmpty()) {
             String message = "Вещь с id: " + itemId + " успешно удалена";
 
             log.info(message);
@@ -268,5 +272,25 @@ public class ItemServiceImpl implements ItemService {
 
             throw new NotFoundException(message);
         }
+    }
+
+    private PageRequest getPage(int from, int size) {
+        if (from < 0) {
+            String message = "Параметр запроса from: " + from + " не может быть меньше 0";
+
+            log.info(message);
+
+            throw new BadRequestException(message);
+        }
+
+        if (size <= 0) {
+            String message = "Параметр запроса size: " + size + " должен быть больше 0";
+
+            log.info(message);
+
+            throw new BadRequestException(message);
+        }
+
+        return PageRequest.of(from > 0 ? from / size : 0, size);
     }
 }

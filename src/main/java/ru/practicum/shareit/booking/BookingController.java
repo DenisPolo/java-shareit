@@ -21,15 +21,19 @@ public class BookingController {
     @GetMapping
     public ResponseEntity<List<BookingDto>> findBookingsForUser(
             @RequestHeader(name = "X-Sharer-User-Id") long userId,
-            @RequestParam(defaultValue = "ALL", required = false) String state) {
-        return ResponseEntity.ok().body(service.findBookingsForUser(userId, state));
+            @RequestParam(defaultValue = "ALL", required = false) String state,
+            @RequestParam(defaultValue = "0") int from,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok().body(service.findBookingsForUser(userId, state, from, size));
     }
 
     @GetMapping("/owner")
     public ResponseEntity<List<BookingDto>> findBookingsForOwner(
             @RequestHeader(name = "X-Sharer-User-Id") long ownerId,
-            @RequestParam(defaultValue = "ALL", required = false) String state) {
-        return ResponseEntity.ok().body(service.findBookingsForOwner(ownerId, state));
+            @RequestParam(defaultValue = "ALL", required = false) String state,
+            @RequestParam(defaultValue = "0") int from,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok().body(service.findBookingsForOwner(ownerId, state, from, size));
     }
 
     @GetMapping("/{bookingId}")
@@ -51,7 +55,7 @@ public class BookingController {
         return ResponseEntity.ok().body(service.updateBooking(ownerId, bookingId, approved));
     }
 
-    @PatchMapping
+    @DeleteMapping("/{bookingId}")
     public ResponseEntity<ResponseFormat> deleteBooking(@RequestHeader("X-Sharer-User-Id") long userId,
                                                         @PathVariable long bookingId) {
         return ResponseEntity.ok().body(service.deleteBooking(userId, bookingId));
