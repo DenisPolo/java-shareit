@@ -24,7 +24,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceUnitTest {
-    private final static long id = 1L;
+    private final long id = 1L;
 
     @Mock
     private UserRepository userRepository;

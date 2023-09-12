@@ -31,8 +31,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ItemRequestServiceUnitTest {
-    private final static long userId = 1L;
-    private final static long requestId = 1L;
+    private final long userId = 1L;
+    private final long requestId = 1L;
 
     @Mock
     private ItemRepository itemRepository;
