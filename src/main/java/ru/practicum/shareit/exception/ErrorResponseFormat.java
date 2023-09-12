@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 
-@ToString
 @Getter
 public class ErrorResponseFormat {
 

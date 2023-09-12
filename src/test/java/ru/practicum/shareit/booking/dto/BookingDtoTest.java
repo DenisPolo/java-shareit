@@ -10,8 +10,10 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.user.dto.UserDto;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @JsonTest
 public class BookingDtoTest {
@@ -42,6 +44,13 @@ public class BookingDtoTest {
                 item,
                 BookingStatus.APPROVED,
                 "2023.01.03 12:00:00");
+
+        assertEquals(bookingDto.hashCode(), Objects.hash(bookingDto.getId(),
+                bookingDto.getStart(),
+                bookingDto.getEnd(),
+                bookingDto.getBooker(),
+                bookingDto.getItem(),
+                bookingDto.getStatus()));
 
         JsonContent<BookingDto> result = json.write(bookingDto);
 
