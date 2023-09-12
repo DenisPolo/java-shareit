@@ -8,8 +8,10 @@ import org.springframework.boot.test.json.JsonContent;
 import ru.practicum.shareit.item.dto.ItemForItemRequestDto;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @JsonTest
 public class ItemRequestDtoTest {
@@ -34,6 +36,12 @@ public class ItemRequestDtoTest {
                 "2023.01.03 12:00:00",
                 List.of(item)
         );
+
+        assertEquals(request.hashCode(), Objects.hash(request.getId(),
+                request.getDescription(),
+                request.getCreated(),
+                request.getItems()
+        ));
 
         JsonContent<ItemRequestDto> result = json.write(request);
 

@@ -2,12 +2,10 @@ package ru.practicum.shareit.responseFormat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
-import lombok.ToString;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
 
-@ToString
 @Getter
 public class ResponseFormat {
 
