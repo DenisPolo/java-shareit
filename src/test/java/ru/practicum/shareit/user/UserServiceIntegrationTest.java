@@ -1,6 +1,7 @@
 package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.exception.AlreadyExistsException;
 import ru.practicum.shareit.responseFormat.ResponseFormat;
 import ru.practicum.shareit.user.dto.UserCreationDto;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -100,6 +102,21 @@ public class UserServiceIntegrationTest {
         assertNotNull(actual2);
         assertEquals(expected1, actual1);
         assertEquals(expected2, actual2);
+    }
+
+    @Test
+    void testUpdateUserShouldReturnExceptionWhenUserWithEmailAlreadyExists() {
+        final UserCreationDto userCreationDto = new UserCreationDto("user@yandex.ru", "user3");
+
+        userService.createUser(new UserCreationDto("user@yandex.ru", "user"));
+        userService.createUser(new UserCreationDto("user1@yandex.ru", "user1"));
+
+        final AlreadyExistsException exception = Assertions.assertThrows(
+                AlreadyExistsException.class,
+                () -> userService.updateUser(2L, userCreationDto));
+
+        assertNotNull(exception);
+        assertEquals("Пользователь с Email: user@yandex.ru уже существует", exception.getMessage());
     }
 
     @Test
