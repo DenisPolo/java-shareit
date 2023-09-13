@@ -121,6 +121,9 @@ public class ItemServiceIntegrationTest {
 
     @Test
     void testFindItemsForOwner() {
+        Booking booking4 = new Booking(null, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(2), user1,
+                item3, BookingStatus.APPROVED, LocalDateTime.now());
+
         item3.setOwner(user2);
         booking3.setBooker(user3);
         comment3.setAuthor(user3);
@@ -134,6 +137,7 @@ public class ItemServiceIntegrationTest {
         bookingRepository.save(booking1);
         bookingRepository.save(booking2);
         bookingRepository.save(booking3);
+        bookingRepository.save(booking4);
         commentRepository.save(comment1);
         commentRepository.save(comment2);
         commentRepository.save(comment3);
@@ -146,7 +150,7 @@ public class ItemServiceIntegrationTest {
 
         Map<Long, List<Booking>> bookingsByItemIds = new HashMap<>();
         bookingsByItemIds.put(2L, List.of(booking2));
-        bookingsByItemIds.put(3L, List.of(booking3));
+        bookingsByItemIds.put(3L, List.of(booking3, booking4));
 
         final List<ItemWithBookingsDto> expected = Stream.of(item2, item3)
                 .map((i) -> ItemMapper.INSTANCE.mapToItemWithBookingsDto(i, bookingsByItemIds.get(i.getId())))

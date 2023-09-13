@@ -159,11 +159,17 @@ public class BookingServiceIntegrationTest {
         userRepository.save(user1);
         userRepository.save(user2);
         userRepository.save(user3);
+        userRepository.save(user4);
         itemRepository.save(item1);
+        itemRepository.save(item2);
+        bookingRepository.save(booking1);
+        bookingRepository.save(booking2);
+        bookingRepository.save(booking3);
+        bookingRepository.save(booking4);
 
         final BookingDto actual = bookingService.createBooking(3L, new BookingCreationDto(null,
                 time.plusDays(1), time.plusDays(2), 3L, 1L, null));
-        final BookingDto expected = BookingMapper.INSTANCE.mapToBookingDto(new Booking(1L,
+        final BookingDto expected = BookingMapper.INSTANCE.mapToBookingDto(new Booking(5L,
                 time.plusDays(1), time.plusDays(2),
                 user3, item1, BookingStatus.WAITING, LocalDateTime.now()));
 
