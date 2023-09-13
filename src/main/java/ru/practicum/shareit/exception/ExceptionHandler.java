@@ -20,12 +20,8 @@ public class ExceptionHandler {
     public ResponseFormat methodArgumentNotValidExceptionHandle(MethodArgumentNotValidException e) {
         String defaultMessage;
 
-        if (e.getMessage().contains("default message")) {
             List<String> messages = new ArrayList<>(List.of(e.getMessage().split(";")));
             defaultMessage = messages.get(messages.size() - 1).replaceAll(".*\\[|\\].*", "");
-        } else {
-            defaultMessage = e.getMessage();
-        }
         log.warn(defaultMessage);
         return new ResponseFormat(defaultMessage, HttpStatus.BAD_REQUEST);
     }

@@ -8,8 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.jdbc.Sql;
 import ru.practicum.shareit.user.dto.UserCreationDto;
@@ -68,7 +67,6 @@ public class ExceptionHandlerTest {
 
     @Test
     public void searchItems_shouldReturnBadRequest_whenEmptySearchText() {
-
         ResponseEntity<ErrorResponseFormat> response = restTemplate
                 .getForEntity(url.resolve("/items/search?from=0&size=10"), ErrorResponseFormat.class);
 
@@ -97,9 +95,9 @@ public class ExceptionHandlerTest {
 
     @Test
     public void createUser_shouldReturnBadRequest_whenNameIsBlanc() {
-        user1.setName(" ");
+        user2.setName(" ");
 
-        ResponseEntity<ErrorResponseFormat> response = restTemplate.postForEntity(url, user1, ErrorResponseFormat.class);
+        ResponseEntity<ErrorResponseFormat> response = restTemplate.postForEntity(url, user2, ErrorResponseFormat.class);
 
         assertSame(response.getStatusCode(), HttpStatus.BAD_REQUEST);
         assertEquals(Objects.requireNonNull(response.getBody()).getError(), ("Имя не должно быть пустым"));
@@ -107,12 +105,25 @@ public class ExceptionHandlerTest {
 
     @Test
     public void createUser_shouldReturnBadRequest_whenEmailDoesNotMatchEmailFormat() {
-        user1.setEmail("mail");
+        user2.setEmail("mail");
 
-        ResponseEntity<ErrorResponseFormat> response = restTemplate.postForEntity(url, user1, ErrorResponseFormat.class);
+        ResponseEntity<ErrorResponseFormat> response = restTemplate.postForEntity(url, user2, ErrorResponseFormat.class);
 
         assertSame(response.getStatusCode(), HttpStatus.BAD_REQUEST);
         assert (Objects.requireNonNull(response.getBody()).getError()
                 .contains("Email не соответстует формату адреса электронной почты"));
+    }
+
+    @Test
+    public void findBookingsForUser_shouldReturnInternalServerError_whenUnknownState() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Sharer-User-Id", "1");
+
+        ResponseEntity<ErrorResponseFormat> response = restTemplate.exchange("/bookings?state=UNKNOWN_STATUS",
+                HttpMethod.GET, new HttpEntity<>(headers), ErrorResponseFormat.class);
+
+        assertSame(response.getStatusCode(), HttpStatus.INTERNAL_SERVER_ERROR);
+        assertEquals(Objects.requireNonNull(response.getBody()).getError(),
+                ("Unknown state: UNKNOWN_STATUS"));
     }
 }
