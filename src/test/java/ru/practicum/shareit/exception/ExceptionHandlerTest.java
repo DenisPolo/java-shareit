@@ -59,7 +59,8 @@ public class ExceptionHandlerTest {
 
     @Test
     public void createUser_shouldReturnBadRequest_whenEmptyUserNameAndEmail() {
-        ResponseEntity<ErrorResponseFormat> postUserResponse = restTemplate.postForEntity(url, user1, ErrorResponseFormat.class);
+        ResponseEntity<ErrorResponseFormat> postUserResponse = restTemplate.postForEntity(url, user1,
+                ErrorResponseFormat.class);
 
         assertSame(postUserResponse.getStatusCode(), HttpStatus.BAD_REQUEST);
         assertEquals(Objects.requireNonNull(postUserResponse.getBody()).getError(), "Email не должен быть пустым");
@@ -68,8 +69,8 @@ public class ExceptionHandlerTest {
     @Test
     public void searchItems_shouldReturnBadRequest_whenEmptySearchText() {
 
-        ResponseEntity<ErrorResponseFormat> response = restTemplate.getForEntity(url.resolve("/items/search?from=0&size=10"),
-                ErrorResponseFormat.class);
+        ResponseEntity<ErrorResponseFormat> response = restTemplate
+                .getForEntity(url.resolve("/items/search?from=0&size=10"), ErrorResponseFormat.class);
 
         assertSame(response.getStatusCode(), HttpStatus.BAD_REQUEST);
         assertEquals(Objects.requireNonNull(response.getBody()).getError(), "Отсутствует параметр запроса");
@@ -87,9 +88,31 @@ public class ExceptionHandlerTest {
 
     @Test
     public void getUserById_shouldReturnNotFoundException_whenUserNotExists() {
-        ResponseEntity<ErrorResponseFormat> response = restTemplate.getForEntity(url.resolve("/users/1"), ErrorResponseFormat.class);
+        ResponseEntity<ErrorResponseFormat> response = restTemplate.getForEntity(url.resolve("/users/1"),
+                ErrorResponseFormat.class);
 
         assertSame(response.getStatusCode(), HttpStatus.NOT_FOUND);
         assertEquals(Objects.requireNonNull(response.getBody()).getError(), "Пользователя с ID: 1 не существует");
+    }
+
+    @Test
+    public void createUser_shouldReturnBadRequest_whenNameIsBlanc() {
+        user1.setName(" ");
+
+        ResponseEntity<ErrorResponseFormat> response = restTemplate.postForEntity(url, user1, ErrorResponseFormat.class);
+
+        assertSame(response.getStatusCode(), HttpStatus.BAD_REQUEST);
+        assertEquals(Objects.requireNonNull(response.getBody()).getError(), ("Имя не должно быть пустым"));
+    }
+
+    @Test
+    public void createUser_shouldReturnBadRequest_whenEmailDoesNotMatchEmailFormat() {
+        user1.setEmail("mail");
+
+        ResponseEntity<ErrorResponseFormat> response = restTemplate.postForEntity(url, user1, ErrorResponseFormat.class);
+
+        assertSame(response.getStatusCode(), HttpStatus.BAD_REQUEST);
+        assert (Objects.requireNonNull(response.getBody()).getError()
+                .contains("Email не соответстует формату адреса электронной почты"));
     }
 }

@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.AlreadyExistsException;
+import ru.practicum.shareit.exception.BadRequestException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.responseFormat.ResponseFormat;
 import ru.practicum.shareit.user.dto.UserCreationDto;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -37,9 +39,9 @@ public class UserServiceIntegrationTest {
 
     @BeforeEach
     public void beforeEach() {
-        user1 = new User(null, "user1", "user1@yandex.ru", LocalDateTime.of(2023, 1, 1, 12, 0));
-        user2 = new User(null, "user2", "user2@yandex.ru", LocalDateTime.of(2023, 2, 2, 12, 0));
-        user3 = new User(null, "user3", "user3@yandex.ru", LocalDateTime.of(2023, 3, 3, 12, 0));
+        user1 = new User(null, "user1@yandex.ru", "user1", LocalDateTime.of(2023, 1, 1, 12, 0));
+        user2 = new User(null, "user2@yandex.ru", "user2", LocalDateTime.of(2023, 2, 2, 12, 0));
+        user3 = new User(null, "user3@yandex.ru", "user3", LocalDateTime.of(2023, 3, 3, 12, 0));
     }
 
     @Test
@@ -77,12 +79,21 @@ public class UserServiceIntegrationTest {
     }
 
     @Test
+    void testGetUserByIdThrowNotFoundExceptionWhenUserIsNotExists() {
+        final NotFoundException exception = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> userService.getUserById(1L));
+
+        Assertions.assertEquals("Пользователя с ID: 1 не существует", exception.getMessage());
+    }
+
+    @Test
     void testCreateUser() {
-        final UserCreationDto userCreationDto = new UserCreationDto("userCreated", "userCreated@yandex.ru");
+        final UserCreationDto userCreationDto = new UserCreationDto("userCreated@yandex.ru", "userCreated");
 
         final UserDto actual = userService.createUser(userCreationDto);
         final UserDto expected = UserMapper.INSTANCE
-                .mapToUserDto(new User(1L, "userCreated", "userCreated@yandex.ru", LocalDateTime.now()));
+                .mapToUserDto(new User(1L, "userCreated@yandex.ru", "userCreated", LocalDateTime.now()));
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -90,13 +101,13 @@ public class UserServiceIntegrationTest {
 
     @Test
     void testUpdateUser() {
-        final UserCreationDto userCreationDto = new UserCreationDto("userUpdated", "userUpdated@yandex.ru");
+        final UserCreationDto userCreationDto = new UserCreationDto("userUpdated@yandex.ru", "userUpdated");
 
-        final UserDto actual1 = userService.createUser(new UserCreationDto("user", "use@yandex.ru"));
+        final UserDto actual1 = userService.createUser(new UserCreationDto("use@yandex.ru", "user"));
         final UserDto expected1 = userService.getUserById(1L);
         final UserDto actual2 = userService.updateUser(1L, userCreationDto);
         final UserDto expected2 = UserMapper.INSTANCE
-                .mapToUserDto(new User(1L, "userUpdated", "userUpdated@yandex.ru", LocalDateTime.now()));
+                .mapToUserDto(new User(1L, "userUpdated@yandex.ru", "userUpdated", LocalDateTime.now()));
 
         assertNotNull(actual1);
         assertNotNull(actual2);
@@ -105,7 +116,27 @@ public class UserServiceIntegrationTest {
     }
 
     @Test
-    void testUpdateUserShouldReturnExceptionWhenUserWithEmailAlreadyExists() {
+    void testUpdateUserThrowNotFoundExceptionWhenUserIsNotExists() {
+        final NotFoundException exception = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> userService.updateUser(1L, new UserCreationDto("email@mail", "name")));
+
+        Assertions.assertEquals("Пользователя с ID: 1 не существует", exception.getMessage());
+    }
+
+    @Test
+    void testUpdateUserThrowBadRequestExceptionWhenEmailAndNameIsNull() {
+        userRepository.save(user1);
+
+        final BadRequestException exception = Assertions.assertThrows(
+                BadRequestException.class,
+                () -> userService.updateUser(1L, new UserCreationDto(null, null)));
+
+        Assertions.assertEquals("Выполнен запрос с пустыми полями email и name", exception.getMessage());
+    }
+
+    @Test
+    void testUpdateUserThrowAlreadyExistsExceptionWhenUserWithEmailAlreadyExists() {
         final UserCreationDto userCreationDto = new UserCreationDto("user@yandex.ru", "user3");
 
         userService.createUser(new UserCreationDto("user@yandex.ru", "user"));
@@ -121,7 +152,7 @@ public class UserServiceIntegrationTest {
 
     @Test
     void testDeleteUser() {
-        final UserDto actual1 = userService.createUser(new UserCreationDto("userCreated", "userCreated@yandex.ru"));
+        final UserDto actual1 = userService.createUser(new UserCreationDto("userCreated@yandex.ru", "userCreated"));
         final UserDto expected1 = userService.getUserById(1L);
         final ResponseFormat actual2 = userService.deleteUser(1L);
         final ResponseFormat expected2 = new ResponseFormat("Пользователь с ID: 1 успешно удален", HttpStatus.OK);

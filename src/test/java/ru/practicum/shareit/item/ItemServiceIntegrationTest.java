@@ -312,6 +312,16 @@ public class ItemServiceIntegrationTest {
     }
 
     @Test
+    void testSaveItemThrowsNotFoundExceptionWhenOwnerIsNotExists() {
+        final NotFoundException exception = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> itemService.saveItem(1L, new ItemCreationDto(null, null, "itemSaved",
+                        "itemSavedDescription", true, null)));
+
+        Assertions.assertEquals("Пользователь с ID: 1 не существует", exception.getMessage());
+    }
+
+    @Test
     void testPostComment() {
         userRepository.save(user1);
         itemRepository.save(item1);
@@ -338,6 +348,38 @@ public class ItemServiceIntegrationTest {
     }
 
     @Test
+    void testPostCommentThrowsNotFoundExceptionWhenAuthorIsNotExists() {
+        final NotFoundException exception = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> itemService.postComment(1L, 1L, new CommentCreationDto("any text")));
+
+        Assertions.assertEquals("Пользователь с ID: 1 не существует", exception.getMessage());
+    }
+
+    @Test
+    void testPostCommentThrowsNotFoundExceptionWhenItemIsNotExists() {
+        userRepository.save(user1);
+
+        final NotFoundException exception = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> itemService.postComment(1L, 1L, new CommentCreationDto("any text")));
+
+        Assertions.assertEquals("Вещь с ID: 1 не существует", exception.getMessage());
+    }
+
+    @Test
+    void testPostCommentThrowsBadRequestExceptionWhenEndingBookingIsNotExists() {
+        userRepository.save(user1);
+        itemRepository.save(item1);
+
+        final BadRequestException exception = Assertions.assertThrows(
+                BadRequestException.class,
+                () -> itemService.postComment(1L, 1L, new CommentCreationDto("any text")));
+
+        Assertions.assertEquals("Отсутствует завершенная аренда", exception.getMessage());
+    }
+
+    @Test
     void testUpdateItem() {
         userRepository.save(user1);
         itemRepository.save(item1);
@@ -355,6 +397,48 @@ public class ItemServiceIntegrationTest {
     }
 
     @Test
+    void testUpdateItemThrowBadRequestExceptionWhenDifferentItemIdsInBodyAndHeader() {
+        final BadRequestException exception = Assertions.assertThrows(
+                BadRequestException.class,
+                () -> itemService.updateItem(1L, 1L, new ItemCreationDto(2L, 1L, "item", "item description", true, 1L)));
+
+        Assertions.assertEquals("В запросе не совпадают itemId в body и URI:\nPathVariable itemId: 1" +
+                "\nbody itemId: 2", exception.getMessage());
+    }
+
+    @Test
+    void testUpdateItemThrowsNotFoundExceptionWhenOwnerIsNotExists() {
+        final NotFoundException exception = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> itemService.updateItem(1L, 1L, new ItemCreationDto(1L, 1L, "item", "item description", true, 1L)));
+
+        Assertions.assertEquals("Пользователя с ID: 1 не существует", exception.getMessage());
+    }
+
+    @Test
+    void testUpdateItemThrowsNotFoundExceptionWhenItemIsNotExists() {
+        userRepository.save(user1);
+
+        final NotFoundException exception = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> itemService.updateItem(1L, 1L, new ItemCreationDto(1L, 1L, "item", "item description", true, 1L)));
+
+        Assertions.assertEquals("Вещь с ID: 1 не существует", exception.getMessage());
+    }
+
+    @Test
+    void testUpdateItemThrowsBadRequestExceptionWhenItemCreationFieldsAreNull() {
+        userRepository.save(user1);
+        itemRepository.save(item1);
+
+        final BadRequestException exception = Assertions.assertThrows(
+                BadRequestException.class,
+                () -> itemService.updateItem(1L, 1L, new ItemCreationDto(1L, 1L, null, null, null, 1L)));
+
+        Assertions.assertEquals("Выполнен запрос с пустыми полями name, description и available", exception.getMessage());
+    }
+
+    @Test
     void testDeleteItem() {
         userRepository.save(user1);
         itemRepository.save(item1);
@@ -368,5 +452,25 @@ public class ItemServiceIntegrationTest {
         assertNotNull(actual);
         assertEquals(expected.getStatus(), actual.getStatus());
         assertEquals(expected.getMessage(), actual.getMessage());
+    }
+
+    @Test
+    void testDeleteItemThrowsNotFoundExceptionWhenUserIsNotExists() {
+        final NotFoundException exception = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> itemService.deleteItem(1L, 1L));
+
+        Assertions.assertEquals("Пользователя с ID: 1 не существует", exception.getMessage());
+    }
+
+    @Test
+    void testDeleteItemThrowsNotFoundExceptionWhenItemIsNotExists() {
+        userRepository.save(user1);
+
+        final NotFoundException exception = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> itemService.deleteItem(1L, 1L));
+
+        Assertions.assertEquals("Вещь с ID: 1 не существует", exception.getMessage());
     }
 }
