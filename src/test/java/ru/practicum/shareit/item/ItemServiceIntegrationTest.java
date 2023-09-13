@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.exception.BadRequestException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.comment.CommentMapper;
 import ru.practicum.shareit.item.comment.CommentRepository;
 import ru.practicum.shareit.item.comment.dto.CommentCreationDto;
@@ -67,15 +70,15 @@ public class ItemServiceIntegrationTest {
         item1 = new Item(null, user1, "item1", "firstItem", true, null, LocalDateTime.of(2023, 1, 1, 20, 0));
         item2 = new Item(null, user2, "item2", "secondItem", true, null, LocalDateTime.of(2023, 2, 2, 20, 0));
         item3 = new Item(null, user3, "item3", "thirdItem", true, null, LocalDateTime.of(2023, 3, 3, 20, 0));
-        booking1 = new Booking(null, LocalDateTime.of(2023, 1, 2, 22, 0), LocalDateTime.of(2023, 1, 3, 22, 0), user1,
+        booking1 = new Booking(null, LocalDateTime.of(2023, 1, 2, 22, 0), LocalDateTime.of(2023, 1, 3, 22, 0), user2,
                 item1, BookingStatus.APPROVED, LocalDateTime.of(2023, 1, 2, 12, 0, 0));
-        booking2 = new Booking(null, LocalDateTime.of(2023, 2, 3, 22, 0), LocalDateTime.of(2023, 2, 3, 22, 0), user1,
+        booking2 = new Booking(null, LocalDateTime.of(2023, 2, 3, 22, 0), LocalDateTime.of(2023, 2, 3, 22, 0), user3,
                 item2, BookingStatus.APPROVED, LocalDateTime.of(2023, 2, 3, 12, 0, 0));
         booking3 = new Booking(null, LocalDateTime.of(2023, 3, 4, 22, 0), LocalDateTime.of(2023, 3, 4, 22, 0), user1,
                 item3, BookingStatus.APPROVED, LocalDateTime.of(2023, 3, 4, 12, 0, 0));
-        comment1 = new Comment(null, user1, 1L, "any text 1", LocalDateTime.of(2023, 1, 4, 12, 0, 0));
-        comment2 = new Comment(null, user2, 2L, "any text 2", LocalDateTime.of(2023, 2, 5, 12, 0, 0));
-        comment3 = new Comment(null, user3, 3L, "any text 3", LocalDateTime.of(2023, 3, 6, 12, 0, 0));
+        comment1 = new Comment(null, user2, 1L, "any text 1", LocalDateTime.of(2023, 1, 4, 12, 0, 0));
+        comment2 = new Comment(null, user3, 2L, "any text 2", LocalDateTime.of(2023, 2, 5, 12, 0, 0));
+        comment3 = new Comment(null, user1, 3L, "any text 3", LocalDateTime.of(2023, 3, 6, 12, 0, 0));
 
     }
 
@@ -95,16 +98,6 @@ public class ItemServiceIntegrationTest {
         commentRepository.save(comment3);
 
         final List<ItemWithBookingsDto> actual = itemService.findItems(null, 0, 10);
-
-        item1.setId(1L);
-        item2.setId(2L);
-        item3.setId(3L);
-        booking1.setId(1L);
-        booking2.setId(2L);
-        booking3.setId(3L);
-        comment1.setId(1L);
-        comment2.setId(2L);
-        comment3.setId(3L);
 
         Map<Long, List<CommentDto>> commentsByItemIds = new HashMap<>();
         commentsByItemIds.put(1L, List.of(CommentMapper.INSTANCE.mapToCommentDto(comment1)));
@@ -129,22 +122,35 @@ public class ItemServiceIntegrationTest {
     @Test
     void testFindItemsForOwner() {
         item3.setOwner(user2);
+        booking3.setBooker(user3);
+        comment3.setAuthor(user3);
 
         userRepository.save(user1);
         userRepository.save(user2);
+        userRepository.save(user3);
         itemRepository.save(item1);
         itemRepository.save(item2);
         itemRepository.save(item3);
+        bookingRepository.save(booking1);
+        bookingRepository.save(booking2);
+        bookingRepository.save(booking3);
+        commentRepository.save(comment1);
+        commentRepository.save(comment2);
+        commentRepository.save(comment3);
 
         final List<ItemWithBookingsDto> actual = itemService.findItems(2L, 0, 10);
 
-        item1.setId(1L);
-        item2.setId(2L);
-        item3.setId(3L);
+        Map<Long, List<CommentDto>> commentsByItemIds = new HashMap<>();
+        commentsByItemIds.put(2L, List.of(CommentMapper.INSTANCE.mapToCommentDto(comment2)));
+        commentsByItemIds.put(3L, List.of(CommentMapper.INSTANCE.mapToCommentDto(comment3)));
+
+        Map<Long, List<Booking>> bookingsByItemIds = new HashMap<>();
+        bookingsByItemIds.put(2L, List.of(booking2));
+        bookingsByItemIds.put(3L, List.of(booking3));
 
         final List<ItemWithBookingsDto> expected = Stream.of(item2, item3)
-                .map((i) -> ItemMapper.INSTANCE.mapToItemWithBookingsDto(i, null))
-                .peek(i -> i.setComments(null))
+                .map((i) -> ItemMapper.INSTANCE.mapToItemWithBookingsDto(i, bookingsByItemIds.get(i.getId())))
+                .peek(i -> i.setComments(commentsByItemIds.get(i.getId())))
                 .sorted(Comparator.comparing(ItemWithBookingsDto::getId))
                 .collect(Collectors.toList());
 
@@ -153,22 +159,76 @@ public class ItemServiceIntegrationTest {
     }
 
     @Test
-    void testFindItem() {
-        item2.setOwner(user1);
-        item3.setOwner(user1);
+    void testFindItemByOwner() {
         userRepository.save(user1);
+        userRepository.save(user2);
         itemRepository.save(item1);
-        itemRepository.save(item2);
-        itemRepository.save(item3);
+        bookingRepository.save(booking1);
+        commentRepository.save(comment1);
 
-        final ItemWithBookingsDto actual = itemService.findItem(1L, 2L);
+        final ItemWithBookingsDto actual = itemService.findItem(1L, 1L);
+        final ItemWithBookingsDto expected = ItemMapper.INSTANCE.mapToItemWithBookingsDto(item1, List.of(booking1));
 
-        item2.setId(2L);
+        CommentDto commentDto = CommentMapper.INSTANCE.mapToCommentDto(comment1);
 
-        final ItemWithBookingsDto expected = ItemMapper.INSTANCE.mapToItemWithBookingsDto(item2, new ArrayList<>());
+        expected.setComments(List.of(commentDto));
 
         assertNotNull(actual);
         assertEquals(expected, actual);
+    }
+
+    @Test
+    void testFindItemByBooker() {
+        userRepository.save(user1);
+        userRepository.save(user2);
+        itemRepository.save(item1);
+        bookingRepository.save(booking1);
+        commentRepository.save(comment1);
+
+        final ItemWithBookingsDto actual = itemService.findItem(2L, 1L);
+        final ItemWithBookingsDto expected = ItemMapper.INSTANCE.mapToItemWithBookingsDto(item1, new ArrayList<>());
+
+        CommentDto commentDto = CommentMapper.INSTANCE.mapToCommentDto(comment1);
+
+        expected.setComments(List.of(commentDto));
+
+        assertNotNull(actual);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void testFindItemThrowNotFoundExceptionWhenUserIsNotExists() {
+        final NotFoundException exception = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> itemService.findItem(1L, 1L));
+
+        Assertions.assertEquals("Пользователя с ID: 1 не существует", exception.getMessage());
+    }
+
+    @Test
+    void testFindItemThrowNotFoundExceptionWhenItemIsNotExists() {
+        userRepository.save(user1);
+
+        final NotFoundException exception = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> itemService.findItem(1L, 1L));
+
+        Assertions.assertEquals("Вещь с ID: 1 не существует", exception.getMessage());
+    }
+
+    @Test
+    void testFindItemThrowNotFoundExceptionWhenItemIsNotAvailable() {
+        item1.setAvailable(false);
+
+        userRepository.save(user1);
+        userRepository.save(user2);
+        itemRepository.save(item1);
+
+        final NotFoundException exception = Assertions.assertThrows(
+                NotFoundException.class,
+                () -> itemService.findItem(2L, 1L));
+
+        Assertions.assertEquals("В данный момент вещь с ID: 1 не доступена", exception.getMessage());
     }
 
     @Test
@@ -198,6 +258,42 @@ public class ItemServiceIntegrationTest {
         assertEquals(expected1, actual1);
         assertEquals(expected2, actual2);
         assertEquals(expected3, actual3);
+    }
+
+    @Test
+    void testSearchItemsShouldReturnEmptyListWhenTextIsBlank() {
+        final List<ItemDto> actual = itemService.searchItems(" ", 0, 10);
+        final List<ItemDto> expected = ItemMapper.INSTANCE.mapToItemDto(new ArrayList<>());
+
+        assertNotNull(actual);
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void testSearchItemsThrowsBadRequestExceptionWhenFromIsLessThenZero() {
+        final BadRequestException exception = Assertions.assertThrows(
+                BadRequestException.class,
+                () -> itemService.searchItems("any_text", -1, 10));
+
+        Assertions.assertEquals("Параметр запроса from: -1 не может быть меньше 0", exception.getMessage());
+    }
+
+    @Test
+    void testSearchItemsThrowsBadRequestExceptionWhenSizeIsLessOrEqualsZero() {
+        final BadRequestException exception = Assertions.assertThrows(
+                BadRequestException.class,
+                () -> itemService.searchItems("any_text", 0, 0));
+
+        Assertions.assertEquals("Параметр запроса size: 0 должен быть больше 0", exception.getMessage());
+    }
+
+    @Test
+    void testSearchItemsThrowsBadRequestExceptionWhenTextIsNull() {
+        final BadRequestException exception = Assertions.assertThrows(
+                BadRequestException.class,
+                () -> itemService.searchItems(null, 0, 10));
+
+        Assertions.assertEquals("Отсутствует параметр запроса", exception.getMessage());
     }
 
     @Test
