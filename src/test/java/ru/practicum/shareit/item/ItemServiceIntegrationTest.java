@@ -12,6 +12,7 @@ import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.BookingStatus;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.comment.CommentMapper;
+import ru.practicum.shareit.item.comment.CommentRepository;
 import ru.practicum.shareit.item.comment.dto.CommentCreationDto;
 import ru.practicum.shareit.item.comment.dto.CommentDto;
 import ru.practicum.shareit.item.comment.model.Comment;
@@ -25,9 +26,7 @@ import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,9 +47,16 @@ public class ItemServiceIntegrationTest {
     private Item item1;
     private Item item2;
     private Item item3;
+    private Booking booking1;
+    private Booking booking2;
+    private Booking booking3;
+    private Comment comment1;
+    private Comment comment2;
+    private Comment comment3;
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
     private final ItemServiceImpl itemService;
 
     @BeforeEach
@@ -61,6 +67,16 @@ public class ItemServiceIntegrationTest {
         item1 = new Item(null, user1, "item1", "firstItem", true, null, LocalDateTime.of(2023, 1, 1, 20, 0));
         item2 = new Item(null, user2, "item2", "secondItem", true, null, LocalDateTime.of(2023, 2, 2, 20, 0));
         item3 = new Item(null, user3, "item3", "thirdItem", true, null, LocalDateTime.of(2023, 3, 3, 20, 0));
+        booking1 = new Booking(null, LocalDateTime.of(2023, 1, 2, 22, 0), LocalDateTime.of(2023, 1, 3, 22, 0), user1,
+                item1, BookingStatus.APPROVED, LocalDateTime.of(2023, 1, 2, 12, 0, 0));
+        booking2 = new Booking(null, LocalDateTime.of(2023, 2, 3, 22, 0), LocalDateTime.of(2023, 2, 3, 22, 0), user1,
+                item2, BookingStatus.APPROVED, LocalDateTime.of(2023, 2, 3, 12, 0, 0));
+        booking3 = new Booking(null, LocalDateTime.of(2023, 3, 4, 22, 0), LocalDateTime.of(2023, 3, 4, 22, 0), user1,
+                item3, BookingStatus.APPROVED, LocalDateTime.of(2023, 3, 4, 12, 0, 0));
+        comment1 = new Comment(null, user1, 1L, "any text 1", LocalDateTime.of(2023, 1, 4, 12, 0, 0));
+        comment2 = new Comment(null, user2, 2L, "any text 2", LocalDateTime.of(2023, 2, 5, 12, 0, 0));
+        comment3 = new Comment(null, user3, 3L, "any text 3", LocalDateTime.of(2023, 3, 6, 12, 0, 0));
+
     }
 
     @Test
@@ -71,16 +87,38 @@ public class ItemServiceIntegrationTest {
         itemRepository.save(item1);
         itemRepository.save(item2);
         itemRepository.save(item3);
+        bookingRepository.save(booking1);
+        bookingRepository.save(booking2);
+        bookingRepository.save(booking3);
+        commentRepository.save(comment1);
+        commentRepository.save(comment2);
+        commentRepository.save(comment3);
 
         final List<ItemWithBookingsDto> actual = itemService.findItems(null, 0, 10);
 
         item1.setId(1L);
         item2.setId(2L);
         item3.setId(3L);
+        booking1.setId(1L);
+        booking2.setId(2L);
+        booking3.setId(3L);
+        comment1.setId(1L);
+        comment2.setId(2L);
+        comment3.setId(3L);
+
+        Map<Long, List<CommentDto>> commentsByItemIds = new HashMap<>();
+        commentsByItemIds.put(1L, List.of(CommentMapper.INSTANCE.mapToCommentDto(comment1)));
+        commentsByItemIds.put(2L, List.of(CommentMapper.INSTANCE.mapToCommentDto(comment2)));
+        commentsByItemIds.put(3L, List.of(CommentMapper.INSTANCE.mapToCommentDto(comment3)));
+
+        Map<Long, List<Booking>> bookingsByItemIds = new HashMap<>();
+        bookingsByItemIds.put(1L, List.of(booking1));
+        bookingsByItemIds.put(2L, List.of(booking2));
+        bookingsByItemIds.put(3L, List.of(booking3));
 
         final List<ItemWithBookingsDto> expected = Stream.of(item1, item2, item3)
-                .map((i) -> ItemMapper.INSTANCE.mapToItemWithBookingsDto(i, null))
-                .peek(i -> i.setComments(null))
+                .map((i) -> ItemMapper.INSTANCE.mapToItemWithBookingsDto(i, bookingsByItemIds.get(i.getId())))
+                .peek(i -> i.setComments(commentsByItemIds.get(i.getId())))
                 .sorted(Comparator.comparing(ItemWithBookingsDto::getId))
                 .collect(Collectors.toList());
 
