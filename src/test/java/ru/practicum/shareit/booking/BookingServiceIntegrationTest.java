@@ -1,6 +1,7 @@
 package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingCreationDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.item.ItemMapper;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.responseFormat.ResponseFormat;
@@ -217,5 +219,13 @@ public class BookingServiceIntegrationTest {
         assertEquals(expected1, actual1);
         assertEquals(expected2.getStatus(), actual2.getStatus());
         assertEquals(expected2.getMessage(), actual2.getMessage());
+    }
+
+    @Test
+    void testItemMapperForNull() {
+        Assertions.assertNull(BookingMapper.INSTANCE.mapToBookingDto((Booking) null));
+        Assertions.assertNull(BookingMapper.INSTANCE.mapToBookingDto((Iterable<Booking>) null));
+        Assertions.assertNull(BookingMapper.INSTANCE.mapToNewBooking(null, null, null));
+        Assertions.assertNull(BookingMapper.INSTANCE.mapToBookingForItemDto(null));
     }
 }

@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.verify;
 
 @Transactional
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
@@ -476,5 +478,14 @@ public class ItemServiceIntegrationTest {
                 () -> itemService.deleteItem(1L, 1L));
 
         Assertions.assertEquals("Вещь с ID: 1 не существует", exception.getMessage());
+    }
+
+    @Test
+    void testItemMapperForNull() {
+        Assertions.assertNull(ItemMapper.INSTANCE.mapToItemDto((Item) null));
+        Assertions.assertNull(ItemMapper.INSTANCE.mapToItemDto((Iterable<Item>) null));
+        Assertions.assertNull(ItemMapper.INSTANCE.mapToItemForItemRequestDto((Item) null));
+        Assertions.assertNull(ItemMapper.INSTANCE.mapToItemForItemRequestDto((List<Item>) null));
+        Assertions.assertNull(ItemMapper.INSTANCE.mapToNewItem(null, null));
     }
 }
