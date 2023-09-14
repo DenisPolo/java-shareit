@@ -43,7 +43,6 @@ public class UserControllerIntegrationTest {
     @Autowired
     private TestRestTemplate restTemplate;
 
-
     @BeforeEach
     public void beforeEach() {
         url = URI.create("http://localhost:" + port + "/users");
