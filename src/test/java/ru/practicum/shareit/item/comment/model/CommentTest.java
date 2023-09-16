@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.comment.model;
 
 import org.junit.jupiter.api.Test;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
@@ -12,6 +13,14 @@ public class CommentTest {
 
     @Test
     void testComment() {
+        User owner = new User(
+                1L,
+                "owner@mail",
+                "Owner",
+                LocalDateTime.of(2023, 1, 1, 12, 0, 0));
+
+        Item item = new Item(null, owner, "item1", "firstItem", true, null, LocalDateTime.of(2023, 1, 1, 20, 0));
+
         User user = new User(
                 1L,
                 "user@mail",
@@ -21,20 +30,20 @@ public class CommentTest {
         Comment comment = new Comment(
                 1L,
                 user,
-                1L,
+                item,
                 "any text",
                 LocalDateTime.of(2023, 1, 1, 12, 0, 0)
         );
 
         assertEquals(comment.hashCode(), Objects.hash(comment.getId(),
                 comment.getAuthor(),
-                comment.getItemId(),
+                comment.getItem(),
                 comment.getText()));
 
         assertEquals(comment, new Comment(
                 1L,
                 user,
-                1L,
+                item,
                 "any text",
                 LocalDateTime.of(2023, 1, 1, 12, 0, 0)
         ));

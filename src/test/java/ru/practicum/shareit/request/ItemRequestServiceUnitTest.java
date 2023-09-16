@@ -56,10 +56,10 @@ public class ItemRequestServiceUnitTest {
         final ItemRequest itemRequest1 = mock(ItemRequest.class);
         final ItemRequest itemRequest2 = mock(ItemRequest.class);
 
-        when(item1.getRequestId()).thenReturn(1L);
-        when(item2.getRequestId()).thenReturn(1L);
-        when(item3.getRequestId()).thenReturn(2L);
-        when(item4.getRequestId()).thenReturn(2L);
+        when(item1.getRequest()).thenReturn(itemRequest1);
+        when(item2.getRequest()).thenReturn(itemRequest1);
+        when(item3.getRequest()).thenReturn(itemRequest2);
+        when(item4.getRequest()).thenReturn(itemRequest2);
         when(itemRequest1.getId()).thenReturn(requestId);
         when(itemRequest1.getCreated()).thenReturn(Instant.now());
         when(itemRequest2.getId()).thenReturn(requestId + 1);
@@ -148,7 +148,8 @@ public class ItemRequestServiceUnitTest {
         final User user = mock(User.class);
         final ItemRequest itemRequest = mock(ItemRequest.class);
 
-        when(itemRequest.getUserId()).thenReturn(userId);
+        when(itemRequest.getUser()).thenReturn(user);
+        when(user.getId()).thenReturn(userId);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRequestRepository.findById(anyLong())).thenReturn(Optional.of(itemRequest))
                 .thenReturn(Optional.empty());
@@ -219,7 +220,8 @@ public class ItemRequestServiceUnitTest {
         final User user = mock(User.class);
         final ItemRequest itemRequest = mock(ItemRequest.class);
 
-        when(itemRequest.getUserId()).thenReturn(userId + 1);
+        when(itemRequest.getUser()).thenReturn(user);
+        when(itemRequest.getUser().getId()).thenReturn(userId + 1);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRequestRepository.findById(anyLong())).thenReturn(Optional.of(itemRequest));
 
@@ -235,7 +237,8 @@ public class ItemRequestServiceUnitTest {
         final User user = mock(User.class);
         final ItemRequest itemRequest = mock(ItemRequest.class);
 
-        when(itemRequest.getUserId()).thenReturn(userId);
+        when(itemRequest.getUser()).thenReturn(user);
+        when(itemRequest.getUser().getId()).thenReturn(userId);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRequestRepository.findById(anyLong())).thenReturn(Optional.of(itemRequest));
 

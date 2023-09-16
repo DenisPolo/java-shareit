@@ -49,13 +49,13 @@ public class ItemRequestServiceIntegrationTest {
         user2 = new User(null, "user2", "user2@yandex.ru", LocalDateTime.of(2023, 2, 2, 12, 0));
         user3 = new User(null, "user3", "user3@yandex.ru", LocalDateTime.of(2023, 3, 3, 12, 0));
         user4 = new User(null, "user4", "user4@yandex.ru", LocalDateTime.of(2023, 4, 4, 12, 0));
-        request1 = new ItemRequest(null, 1L, "item_request_description_1",
+        request1 = new ItemRequest(null, user1, "item_request_description_1",
                 LocalDateTime.of(2023, 1, 1, 22, 0).toInstant(ZoneOffset.UTC));
-        request2 = new ItemRequest(null, 2L, "item_request_description_2",
+        request2 = new ItemRequest(null, user2, "item_request_description_2",
                 LocalDateTime.of(2023, 2, 2, 22, 0).toInstant(ZoneOffset.UTC));
-        request3 = new ItemRequest(null, 3L, "item_request_description_3",
+        request3 = new ItemRequest(null, user3, "item_request_description_3",
                 LocalDateTime.of(2023, 3, 3, 22, 0).toInstant(ZoneOffset.UTC));
-        request4 = new ItemRequest(null, 4L, "item_request_description_4",
+        request4 = new ItemRequest(null, user4, "item_request_description_4",
                 LocalDateTime.of(2023, 4, 4, 22, 0).toInstant(ZoneOffset.UTC));
     }
 

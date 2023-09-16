@@ -23,6 +23,8 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemForItemRequestDto;
 import ru.practicum.shareit.item.dto.ItemWithBookingsDto;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.ItemRequestRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.responseFormat.ResponseFormat;
 import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
@@ -54,6 +56,9 @@ class ItemServiceUnitTest {
 
     @Mock
     private CommentRepository commentRepository;
+
+    @Mock
+    private ItemRequestRepository requestRepository;
 
     @InjectMocks
     private ItemServiceImpl itemService;
@@ -191,7 +196,8 @@ class ItemServiceUnitTest {
     void testSaveItemNormalCondition() {
         final ItemCreationDto itemCreationDto = mock(ItemCreationDto.class);
         final User owner = mock(User.class);
-        final Item item = ItemMapper.INSTANCE.mapToNewItem(itemCreationDto, owner);
+        final ItemRequest request = mock(ItemRequest.class);
+        final Item item = ItemMapper.INSTANCE.mapToNewItem(itemCreationDto, owner, request);
 
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(owner));
         when(itemRepository.save(any(Item.class))).thenReturn(item);
@@ -232,6 +238,7 @@ class ItemServiceUnitTest {
         final ItemCreationDto itemCreationDto = mock(ItemCreationDto.class);
         final Item updatableItem = new Item();
         final User user = mock(User.class);
+        final ItemRequest request = mock(ItemRequest.class);
 
         when(itemCreationDto.getId()).thenReturn(itemId);
         when(itemCreationDto.getName()).thenReturn("item_name");
@@ -240,6 +247,7 @@ class ItemServiceUnitTest {
         when(itemRepository.findById(anyLong())).thenReturn(Optional.of(updatableItem));
         when(itemRepository.save(any(Item.class))).thenReturn(updatableItem);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
+        when(requestRepository.findById(anyLong())).thenReturn(Optional.of(request));
 
         final ItemDto actual = itemService.updateItem(userId, itemId, itemCreationDto);
 

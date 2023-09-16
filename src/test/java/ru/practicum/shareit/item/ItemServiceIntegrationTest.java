@@ -76,10 +76,9 @@ public class ItemServiceIntegrationTest {
                 item2, BookingStatus.APPROVED, LocalDateTime.of(2023, 2, 3, 12, 0, 0));
         booking3 = new Booking(null, LocalDateTime.of(2023, 3, 4, 22, 0), LocalDateTime.of(2023, 3, 4, 22, 0), user1,
                 item3, BookingStatus.APPROVED, LocalDateTime.of(2023, 3, 4, 12, 0, 0));
-        comment1 = new Comment(null, user2, 1L, "any text 1", LocalDateTime.of(2023, 1, 4, 12, 0, 0));
-        comment2 = new Comment(null, user3, 2L, "any text 2", LocalDateTime.of(2023, 2, 5, 12, 0, 0));
-        comment3 = new Comment(null, user1, 3L, "any text 3", LocalDateTime.of(2023, 3, 6, 12, 0, 0));
-
+        comment1 = new Comment(null, user2, item1, "any text 1", LocalDateTime.of(2023, 1, 4, 12, 0, 0));
+        comment2 = new Comment(null, user3, item2, "any text 2", LocalDateTime.of(2023, 2, 5, 12, 0, 0));
+        comment3 = new Comment(null, user1, item3, "any text 3", LocalDateTime.of(2023, 3, 6, 12, 0, 0));
     }
 
     @Test
@@ -345,7 +344,7 @@ public class ItemServiceIntegrationTest {
         final CommentDto actual = itemService.postComment(1L, 1L, new CommentCreationDto("CommentText"));
 
         final CommentDto expected = CommentMapper.INSTANCE
-                .mapToCommentDto(new Comment(1L, user1, 1L, "CommentText", LocalDateTime.now()));
+                .mapToCommentDto(new Comment(1L, user1, item1, "CommentText", LocalDateTime.now()));
 
         assertNotNull(actual);
         assertEquals(expected, actual);
@@ -484,6 +483,6 @@ public class ItemServiceIntegrationTest {
         Assertions.assertNull(ItemMapper.INSTANCE.mapToItemDto((Iterable<Item>) null));
         Assertions.assertNull(ItemMapper.INSTANCE.mapToItemForItemRequestDto((Item) null));
         Assertions.assertNull(ItemMapper.INSTANCE.mapToItemForItemRequestDto((List<Item>) null));
-        Assertions.assertNull(ItemMapper.INSTANCE.mapToNewItem(null, null));
+        Assertions.assertNull(ItemMapper.INSTANCE.mapToNewItem(null, null, null));
     }
 }

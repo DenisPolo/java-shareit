@@ -20,6 +20,8 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemForItemRequestDto;
 import ru.practicum.shareit.item.dto.ItemWithBookingsDto;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.ItemRequestRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.responseFormat.ResponseFormat;
 import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
@@ -36,6 +38,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestRepository itemRequestRepository;
 
     @Transactional(readOnly = true)
     @Override
@@ -63,7 +66,7 @@ public class ItemServiceImpl implements ItemService {
         bookings = (itemIds.isEmpty()) ? new ArrayList<>() : bookingRepository.findBookingsForItemIn(itemIds);
 
         Map<Long, List<CommentDto>> commentsByItemIds = comments.stream()
-                .collect(Collectors.groupingBy(Comment::getItemId, Collectors
+                .collect(Collectors.groupingBy((c) -> c.getItem().getId(), Collectors
                         .mapping(CommentMapper.INSTANCE::mapToCommentDto, Collectors.toList())));
 
         Map<Long, List<Booking>> bookingsByItemIds = bookings.stream()
@@ -152,7 +155,10 @@ public class ItemServiceImpl implements ItemService {
         User owner = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с ID: "
                 + userId + " не существует"));
 
-        Item item = ItemMapper.INSTANCE.mapToNewItem(itemCreationDto, owner);
+        ItemRequest request = (itemCreationDto.getRequestId() == null) ? null : itemRequestRepository
+                .findById(itemCreationDto.getRequestId()).orElse(null);
+
+        Item item = ItemMapper.INSTANCE.mapToNewItem(itemCreationDto, owner, request);
 
         return ItemMapper.INSTANCE.mapToItemForItemRequestDto(itemRepository.save(item));
     }
@@ -164,7 +170,7 @@ public class ItemServiceImpl implements ItemService {
         User author = userRepository.findById(userId).orElseThrow(() -> new NotFoundException("Пользователь с ID: "
                 + userId + " не существует"));
 
-        getItemIfExists(itemId);
+        Item item = getItemIfExists(itemId);
 
         if (bookingRepository.findBookingsForItem(itemId).stream()
                 .noneMatch(b -> b.getStart().isBefore(LocalDateTime.now()))) {
@@ -176,7 +182,7 @@ public class ItemServiceImpl implements ItemService {
         }
 
         return CommentMapper.INSTANCE
-                .mapToCommentDto(commentRepository.save(new Comment(author, itemId, comment.getText())));
+                .mapToCommentDto(commentRepository.save(new Comment(author, item, comment.getText())));
     }
 
     @Override
@@ -220,7 +226,7 @@ public class ItemServiceImpl implements ItemService {
         }
 
         if (itemCreationDto.getRequestId() != null) {
-            updatableItem.setRequestId(itemCreationDto.getRequestId());
+            updatableItem.setRequest(itemRequestRepository.findById(itemCreationDto.getRequestId()).orElse(null));
         }
 
         return ItemMapper.INSTANCE.mapToItemDto(itemRepository.save(updatableItem));

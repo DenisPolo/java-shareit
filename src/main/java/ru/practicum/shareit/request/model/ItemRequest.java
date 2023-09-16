@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
@@ -22,8 +23,9 @@ public class ItemRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @NotBlank(message = "Описание запроса не должно быть пустым")
     @Column(name = "description")
@@ -38,13 +40,13 @@ public class ItemRequest {
         if (o == null || getClass() != o.getClass()) return false;
         ItemRequest that = (ItemRequest) o;
         return Objects.equals(id, that.id)
-                && Objects.equals(userId, that.userId)
+                && Objects.equals(user, that.user)
                 && Objects.equals(description, that.description)
                 && Objects.equals(created, that.created);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, userId, description, created);
+        return Objects.hash(id, user, description, created);
     }
 }

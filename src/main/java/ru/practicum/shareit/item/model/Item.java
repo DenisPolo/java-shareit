@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
@@ -35,8 +36,9 @@ public class Item {
     @Column(name = "available", nullable = false)
     private Boolean available;
 
-    @Column(name = "item_request_id")
-    private Long requestId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "item_request_id", nullable = false)
+    private ItemRequest request;
 
     @Column(name = "creation_date")
     private LocalDateTime creationDate = LocalDateTime.now();

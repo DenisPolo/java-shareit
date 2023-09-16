@@ -84,9 +84,10 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     public ItemRequestDto createItemRequest(Long userId, ItemRequest itemRequest) {
         log.info("Запрос добавления запроса вещи от пользователя с id: " + userId);
 
-        checkUserExists(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("Пользователь с ID: " + userId + " не существует"));
 
-        itemRequest.setUserId(userId);
+        itemRequest.setUser(user);
 
         return ItemRequestMapper.INSTANCE
                 .mapToItemRequestDto(itemRequestRepository.save(itemRequest), new ArrayList<>());
@@ -98,7 +99,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
         ItemRequest request = getItemRequestIfExists(requestId);
 
-        if (!request.getUserId().equals(userId)) {
+        if (!request.getUser().getId().equals(userId)) {
             String message = "Пользователь с id: " + userId + " не является автором запроса с id: " + requestId;
 
             log.info(message);

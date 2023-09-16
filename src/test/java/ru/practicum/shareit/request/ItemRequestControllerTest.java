@@ -62,7 +62,7 @@ public class ItemRequestControllerTest {
 
         itemRequest = new ItemRequest(
                 1L,
-                1L,
+                null,
                 "item_request_description",
                 Instant.now().minusSeconds(60 * 60 * 24)
         );

@@ -7,10 +7,13 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.jdbc.Sql;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.ItemRequestRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,6 +29,9 @@ public class ItemRepositoryTest {
 
     @Autowired
     private ItemRepository itemRepository;
+
+    @Autowired
+    private ItemRequestRepository requestRepository;
 
     @Test
     public void testFindItemsByOwnerIdShouldReturnEmptyListWhenEmptyDatabase() {
@@ -107,32 +113,49 @@ public class ItemRepositoryTest {
 
     @Test
     public void testFindItemsByRequestIdShouldReturnListWithOneItemWhenItemExists() {
+        User owner = new User(null, "owner", "owber@yandex.ru", LocalDateTime.of(2023, 1, 1, 12, 0));
         User user = new User(null, "user", "user@yandex.ru", LocalDateTime.of(2023, 1, 1, 12, 0));
 
+        userRepository.save(owner);
         userRepository.save(user);
 
-        Item item = new Item(null, user, "item", "firstItem", true, 2L, LocalDateTime.of(2023, 1, 1, 20, 0));
+        ItemRequest request = new ItemRequest(null, user, "Item description", LocalDateTime.of(2023, 1, 1, 12, 0)
+                .toInstant(ZoneOffset.UTC));
 
-        itemRepository.save(item);
+        requestRepository.save(request);
 
-        List<Item> items = itemRepository.findItemsByRequestId(2L);
+        Item item = new Item(null, owner, "item", "firstItem", true, request, LocalDateTime.of(2023, 1, 1, 20, 0));
+
+        System.out.println(itemRepository.save(item));
+
+        List<Item> items = itemRepository.findItemsByRequestId(1L);
 
         Assertions.assertEquals(item, items.get(0));
     }
 
     @Test
     public void testFindItemsByRequestIdInShouldReturnListWithTwoItemsWhenItemsExist() {
+        User owner = new User(null, "owner", "owner@yandex.ru", LocalDateTime.of(2023, 1, 1, 12, 0));
         User user = new User(null, "user", "user@yandex.ru", LocalDateTime.of(2023, 1, 1, 12, 0));
 
+        userRepository.save(owner);
         userRepository.save(user);
 
-        Item item1 = new Item(null, user, "item1", "firstItem", true, 2L, LocalDateTime.of(2023, 1, 1, 20, 0));
-        Item item2 = new Item(null, user, "item2", "secondItem", true, 4L, LocalDateTime.of(2023, 1, 1, 20, 0));
+        ItemRequest request1 = new ItemRequest(null, user, "Item description1", LocalDateTime.of(2023, 1, 1, 12, 0)
+                .toInstant(ZoneOffset.UTC));
+        ItemRequest request2 = new ItemRequest(null, user, "Item description2", LocalDateTime.of(2023, 1, 1, 12, 0)
+                .toInstant(ZoneOffset.UTC));
+
+        requestRepository.save(request1);
+        requestRepository.save(request2);
+
+        Item item1 = new Item(null, owner, "item1", "firstItem", true, request1, LocalDateTime.of(2023, 1, 1, 20, 0));
+        Item item2 = new Item(null, owner, "item2", "secondItem", true, request2, LocalDateTime.of(2023, 1, 1, 20, 0));
 
         itemRepository.save(item1);
         itemRepository.save(item2);
 
-        List<Item> items = itemRepository.findItemsByRequestIdIn(List.of(2L, 4L));
+        List<Item> items = itemRepository.findItemsByRequestIdIn(List.of(1L, 2L));
 
         Assertions.assertEquals(item1, items.get(0));
         Assertions.assertEquals(item2, items.get(1));
