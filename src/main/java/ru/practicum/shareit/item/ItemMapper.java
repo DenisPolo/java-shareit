@@ -9,8 +9,10 @@ import ru.practicum.shareit.booking.dto.BookingForItemDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.dto.ItemCreationDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemForItemRequestDto;
 import ru.practicum.shareit.item.dto.ItemWithBookingsDto;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
@@ -54,7 +56,14 @@ public interface ItemMapper {
                 lastBooking, nextBooking, new ArrayList<>(), creationDate);
     }
 
+    @Mapping(source = "item.creationDate", target = "creationDate", dateFormat = "yyyy.MM.dd hh:mm:ss")
+    @Mapping(source = "request.id", target = "requestId")
+    ItemForItemRequestDto mapToItemForItemRequestDto(Item item);
+
+    List<ItemForItemRequestDto> mapToItemForItemRequestDto(List<Item> items);
+
     @Mapping(source = "itemDto.id", target = "id")
     @Mapping(source = "itemDto.name", target = "name")
-    Item mapToNewItem(ItemCreationDto itemDto, User owner);
+    @Mapping(source = "itemDto.description", target = "description")
+    Item mapToNewItem(ItemCreationDto itemDto, User owner, ItemRequest request);
 }

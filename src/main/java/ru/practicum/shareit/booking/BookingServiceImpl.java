@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,8 +33,10 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingDto> findBookingsForUser(long userId, String state) {
+    public List<BookingDto> findBookingsForUser(long userId, String state, int from, int size) {
         log.info("Запрос списка бронирования вещей пользователем с ID: " + userId);
+
+        PageRequest page = getPage(from, size);
 
         QueryState queryState = Enum.valueOf(QueryState.class, state);
 
@@ -43,29 +46,29 @@ public class BookingServiceImpl implements BookingService {
 
         switch (queryState) {
             case ALL:
-                bookings = bookingRepository.findBookingsForUser(userId);
+                bookings = bookingRepository.findBookingsForUser(userId, page);
                 break;
             case WAITING:
-                bookings = bookingRepository.findBookingsByStatusForUser(userId, BookingStatus.WAITING);
+                bookings = bookingRepository.findBookingsByStatusForUser(userId, BookingStatus.WAITING, page);
                 break;
             case REJECTED:
-                bookings = bookingRepository.findBookingsByStatusForUser(userId, BookingStatus.REJECTED);
+                bookings = bookingRepository.findBookingsByStatusForUser(userId, BookingStatus.REJECTED, page);
                 break;
             case FUTURE:
-                bookings = bookingRepository.findBookingsForUser(userId)
+                bookings = bookingRepository.findBookingsForUser(userId, page)
                         .stream()
                         .filter(b -> b.getStart().isAfter(LocalDateTime.now()))
                         .collect(Collectors.toList());
                 break;
             case CURRENT:
-                bookings = bookingRepository.findBookingsForUser(userId)
+                bookings = bookingRepository.findBookingsForUser(userId, page)
                         .stream()
                         .filter(b -> b.getStart().isBefore(LocalDateTime.now())
                                 && b.getEnd().isAfter(LocalDateTime.now()))
                         .collect(Collectors.toList());
                 break;
             case PAST:
-                bookings = bookingRepository.findBookingsForUser(userId)
+                bookings = bookingRepository.findBookingsForUser(userId, page)
                         .stream()
                         .filter(b -> b.getEnd().isBefore(LocalDateTime.now()))
                         .collect(Collectors.toList());
@@ -77,8 +80,10 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<BookingDto> findBookingsForOwner(long ownerId, String state) {
+    public List<BookingDto> findBookingsForOwner(long ownerId, String state, int from, int size) {
         log.info("Запрос списка бронирования вещей владельца с ID: " + ownerId);
+
+        PageRequest page = getPage(from, size);
 
         QueryState queryState = Enum.valueOf(QueryState.class, state);
 
@@ -88,29 +93,29 @@ public class BookingServiceImpl implements BookingService {
 
         switch (queryState) {
             case ALL:
-                bookings = bookingRepository.findBookingsForOwner(ownerId);
+                bookings = bookingRepository.findBookingsForOwner(ownerId, page);
                 break;
             case WAITING:
-                bookings = bookingRepository.findBookingsByStatusForOwner(ownerId, BookingStatus.WAITING);
+                bookings = bookingRepository.findBookingsByStatusForOwner(ownerId, BookingStatus.WAITING, page);
                 break;
             case REJECTED:
-                bookings = bookingRepository.findBookingsByStatusForOwner(ownerId, BookingStatus.REJECTED);
+                bookings = bookingRepository.findBookingsByStatusForOwner(ownerId, BookingStatus.REJECTED, page);
                 break;
             case FUTURE:
-                bookings = bookingRepository.findBookingsForOwner(ownerId)
+                bookings = bookingRepository.findBookingsForOwner(ownerId, page)
                         .stream()
                         .filter(b -> b.getStart().isAfter(LocalDateTime.now()))
                         .collect(Collectors.toList());
                 break;
             case CURRENT:
-                bookings = bookingRepository.findBookingsForOwner(ownerId)
+                bookings = bookingRepository.findBookingsForOwner(ownerId, page)
                         .stream()
                         .filter(b -> b.getStart().isBefore(LocalDateTime.now())
                                 && b.getEnd().isAfter(LocalDateTime.now()))
                         .collect(Collectors.toList());
                 break;
             case PAST:
-                bookings = bookingRepository.findBookingsForOwner(ownerId)
+                bookings = bookingRepository.findBookingsForOwner(ownerId, page)
                         .stream()
                         .filter(b -> b.getEnd().isBefore(LocalDateTime.now()))
                         .collect(Collectors.toList());
@@ -124,6 +129,8 @@ public class BookingServiceImpl implements BookingService {
     @Transactional(readOnly = true)
     public BookingDto findBooking(long userId, long bookingId) {
         log.info("Запрос бронирования с ID: " + bookingId);
+
+        checkUserExists(userId);
 
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Бронирование с ID: " + bookingId + " не существует"));
@@ -187,6 +194,8 @@ public class BookingServiceImpl implements BookingService {
     public BookingDto updateBooking(long ownerId, long bookingId, boolean approved) {
         log.info("Запрос подтверждения бронирования с id: " + bookingId + " владельцем с id: " + ownerId);
 
+        checkUserExists(ownerId);
+
         Booking updatedBooking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Booking с ID: " + bookingId + " не существует"));
 
@@ -220,6 +229,8 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public ResponseFormat deleteBooking(long userId, long bookingId) {
         log.info("Запрос удаления бронирования с id: " + bookingId + " пользователем с id: " + userId);
+
+        checkUserExists(userId);
 
         Booking removableBooking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new NotFoundException("Booking с ID: " + bookingId + " не существует"));
@@ -282,5 +293,25 @@ public class BookingServiceImpl implements BookingService {
 
             throw new NotFoundException(message);
         }
+    }
+
+    private PageRequest getPage(int from, int size) {
+        if (from < 0) {
+            String message = "Параметр запроса from: " + from + " не может быть меньше 0";
+
+            log.info(message);
+
+            throw new BadRequestException(message);
+        }
+
+        if (size <= 0) {
+            String message = "Параметр запроса size: " + size + " должен быть больше 0";
+
+            log.info(message);
+
+            throw new BadRequestException(message);
+        }
+
+        return PageRequest.of(from > 0 ? from / size : 0, size);
     }
 }

@@ -27,13 +27,13 @@ public class ItemWithBookingsDto {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ItemWithBookingsDto that = (ItemWithBookingsDto) o;
-        return id.equals(that.id)
-                && name.equals(that.name)
-                && description.equals(that.description)
-                && available.equals(that.available)
-                && lastBooking.equals(that.lastBooking)
-                && nextBooking.equals(that.nextBooking)
-                && comments.equals(that.comments);
+        return Objects.equals(id, that.id)
+                && Objects.equals(name, that.name)
+                && Objects.equals(description, that.description)
+                && Objects.equals(available, that.available)
+                && Objects.equals(lastBooking, that.lastBooking)
+                && Objects.equals(nextBooking, that.nextBooking)
+                && Objects.equals(comments, that.comments);
     }
 
     @Override

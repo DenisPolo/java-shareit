@@ -18,7 +18,9 @@ public class UserDto {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserDto userDto = (UserDto) o;
-        return id.equals(userDto.id) && email.equals(userDto.email) && name.equals(userDto.name);
+        return Objects.equals(id, userDto.id)
+                && Objects.equals(email, userDto.email)
+                && Objects.equals(name, userDto.name);
     }
 
     @Override

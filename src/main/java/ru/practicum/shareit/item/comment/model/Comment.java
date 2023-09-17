@@ -1,8 +1,10 @@
 package ru.practicum.shareit.item.comment.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
@@ -14,6 +16,7 @@ import java.util.Objects;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "comments", schema = "public")
 public class Comment {
@@ -28,8 +31,9 @@ public class Comment {
     private User author;
 
     @NotNull
-    @Column(name = "item_id", nullable = false)
-    private Long itemId;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "item_id", nullable = false)
+    private Item item;
 
     @Size(max = 300, message = "Комментарий не должен превышать 300 символов")
     @Column(name = "comment_text", nullable = false)
@@ -38,9 +42,9 @@ public class Comment {
     @Column(name = "creation_date")
     private LocalDateTime creationDate = LocalDateTime.now();
 
-    public Comment(User author, Long itemId, String text) {
+    public Comment(User author, Item item, String text) {
         this.author = author;
-        this.itemId = itemId;
+        this.item = item;
         this.text = text;
     }
 
@@ -51,12 +55,12 @@ public class Comment {
         Comment comment = (Comment) o;
         return id.equals(comment.id)
                 && author.equals(comment.author)
-                && itemId.equals(comment.itemId)
+                && item.equals(comment.item)
                 && text.equals(comment.text);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, author, itemId, text);
+        return Objects.hash(id, author, item, text);
     }
 }
