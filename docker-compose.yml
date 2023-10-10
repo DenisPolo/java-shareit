@@ -10,6 +10,7 @@ services:
       - server
     environment:
       - SHAREIT_SERVER_URL=http://server:9090
+    restart: on-failure
 
   server:
     build: server
@@ -23,6 +24,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/shareit
       - SPRING_DATASOURCE_USERNAME=user
       - SPRING_DATASOURCE_PASSWORD=password
+    restart: on-failure
 
   db:
     image: postgres:14-alpine
@@ -33,3 +35,9 @@ services:
       - POSTGRES_PASSWORD=password
       - POSTGRES_USER=user
       - POSTGRES_DB=shareit
+    volumes:
+      - shareit-db-data:/var/lib/postgresql/data
+
+volumes:
+  shareit-db-data:
+    driver: local
